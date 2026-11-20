@@ -47,4 +47,5 @@ read_globals = {
     "C_GuildInfo", "GuildRoster", "Ambiguate",
     -- Secret values (Midnight / Forever)
     "issecretvalue",
+    "geterrorhandler",
 }
