@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua 5.1 + luacheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1 luarocks
+          sudo luarocks --lua-version=5.1 install luacheck
+      - name: Syntax check
+        run: |
+          find . -name '*.lua' -not -path './tools/*' -not -path './Libs/*' -print0 \
+            | xargs -0 -n1 luac5.1 -p
+      - name: luacheck
+        run: luacheck .
+      - name: Encoding check (no BOM, no CRLF)
+        run: |
+          bad=0
+          for f in $(git ls-files '*.lua' '*.toc' '*.xml' '*.md'); do
+            if head -c3 "$f" | grep -q $'\xef\xbb\xbf'; then echo "BOM: $f"; bad=1; fi
+            if grep -q $'\r' "$f"; then echo "CRLF: $f"; bad=1; fi
+            if ! iconv -f UTF-8 -t UTF-8 "$f" >/dev/null 2>&1; then echo "Invalid UTF-8: $f"; bad=1; fi
+          done
+          exit $bad
+
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine version
+        id: ver
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=dev-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build zip
+        run: bash scripts/build.sh "${{ steps.ver.outputs.version }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpaetiFreunde-${{ steps.ver.outputs.version }}
+          # Wurzel = build/, damit das Artefakt den Ordner SpaetiFreunde/ enthält
+          path: |
+            build/
+            !build/*.zip
+      - name: GitHub release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/SpaetiFreunde-${{ steps.ver.outputs.version }}.zip
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
