@@ -219,7 +219,7 @@ That is about 22–28 developer-days plus test rounds.
 - **Acceptance:** `luac5.1 -v`, `busted --version` and `luacheck --version` all run.
 
 **0.2 Repo skeleton and hygiene — S [DEV]** *(day 1)*
-- Files: `.gitignore` (`Libs/`, `.release/`, `*.zip`, `luacov.*`), `.editorconfig` (UTF-8, LF, 4 spaces), `LICENSE` (MIT proposed; see open questions), the German README stub with the install path `World of Warcraft\_forever_\Interface\AddOns\SpaetiFreunde\` (verify in-game), and `CHANGELOG.md`.
+- Files: `.gitignore` (`Libs/`, `.release/`, `*.zip`, `luacov.*`), `.editorconfig` (UTF-8, LF, 4 spaces), `LICENSE` (all rights reserved, guild-only use), the German README stub with the install path `World of Warcraft\_forever_\Interface\AddOns\SpaetiFreunde\` (verify in-game), and `CHANGELOG.md`.
 - `docs/FOREVER_FACTS.md`, holding the open in-game questions as an empty table.
 - `scripts/check-encoding.sh`: fails on a BOM, invalid UTF-8 or CRLF in `*.lua`, `*.toc` and `*.xml`.
 - The first commit goes on `claude/nifty-sagan-tbuth2`.
@@ -488,7 +488,7 @@ M1 checklist in `docs/TESTING_INGAME.md`:
   - `optout {on}`: self only; hides the player from leaderboards;
   - `erase {}`: self only; voids all of the player's own ops, a right-to-delete;
   - `cfg.set {key, value}`: guild master only for `officerMaxRankIndex`, officers for `pointsDailyLimit`. Last writer wins by `(t, id)`.
-- **Bootstrap:** rank 0 (the guild master) is always an officer. The default threshold is rankIndex ≤ 1. A guild-master transfer is handled automatically, because authority is read from the current roster.
+- **Bootstrap:** rank 0 (the guild master) is always an officer. Officers are the guild master plus every member whose guild rank name is "Officer" (matched by name from the roster, configurable later). A guild-master transfer is handled automatically, because authority is read from the current roster.
 - **Derivation:** see 2.5. Output: totals per month and all time, given counts, and an identity-resolver hook for twinks later.
 - **Ranks:** from `L.RANKS` by all-time points received. Placeholder ladder: Laufkundschaft 0 → Gelegenheitskunde 5 → Stammkunde 20 → Kiezgröße 50 → Spätiverkäufer 100 → Spätibesitzer 250, final names from the guild. Rank-ups are a **local print only**.
 - **Commands:**
@@ -663,16 +663,16 @@ Every feature gets:
 
 ## 5. Open questions for the guild and user
 
-1. **Officers:** which guild rank index counts as "Offizier" (for storno, saying moderation, `cfg`)? Is the default "guild master plus rank 1" right?
-2. **Ranks:** final names and thresholds. The placeholders are Laufkundschaft 0 → Gelegenheitskunde 5 → Stammkunde 20 → Kiezgröße 50 → Spätiverkäufer 100 → Spätibesitzer 250.
+1. ~~**Officers**~~ **Decided:** the guild master plus the rank named "Officer".
+2. **Ranks:** accepted for now. Final names and thresholds. The placeholders are Laufkundschaft 0 → Gelegenheitskunde 5 → Stammkunde 20 → Kiezgröße 50 → Spätiverkäufer 100 → Spätibesitzer 250.
 3. **Spätipunkte rules:** are 3 thanks per giver per day OK? Should there also be a limit of 1 per giver-receiver pair per day? Should the reset be Berlin midnight (proposed)? Is a monthly "Stammkunde des Monats" right, or should seasons be longer?
-4. **Texts:** about 40 Berlinerisch Sprüche, login and online greeting lines, guild in-jokes, Kiez and Spandau references, and Pfand flavour texts. Who is the native-speaker reviewer?
+4. **Texts:** I'll collect common Berlin sayings and Sprüche from the web; guild in-jokes can be added later. About 40 Berlinerisch Sprüche, login and online greeting lines, guild in-jokes, Kiez and Spandau references, and Pfand flavour texts. Who is the native-speaker reviewer?
 5. **Guild Sprüche:** may everyone add them (with moderation), or officers only?
 6. **Guild identity:** the exact guild name spelling, and whether there are twink or sister guilds that should share data.
-7. **Testers:** names for 3–5 M1 testers and 5–10 beta testers. Does anyone have a trial or veteran account?
+7. **Testers:** the user is recruiting them. Names for 3–5 M1 testers and 5–10 beta testers. Does anyone have a trial or veteran account?
 8. **Feature order after v1.0:** Termine (proposed) or Pfand first? Does the guild already use the in-game guild calendar?
-9. **Distribution:** CurseForge and Wago (needs accounts and tokens from the user), or GitHub releases and WowUp only?
-10. **Licence:** MIT (proposed), or "all rights reserved" for a guild-only addon?
+9. ~~**Distribution**~~ **Decided:** GitHub releases only for now; the CurseForge/Wago steps in Phase 6 are postponed.
+10. ~~**Licence**~~ **Decided:** guild-only, all rights reserved.
 11. **Privacy defaults:** leaderboard visible by default with opt-out (proposed), or opt-in?
 12. **Art:** is there a Späti logo for the minimap and compartment icon (64×64 TGA)? Until then a built-in drink icon is used.
 
