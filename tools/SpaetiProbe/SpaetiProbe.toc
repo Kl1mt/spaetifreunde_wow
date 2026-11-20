@@ -1,0 +1,9 @@
+## Interface: 16001, 120105
+## Title: SpaetiProbe (Spätifreunde Diagnose)
+## Notes: Diagnose-Addon: prüft Forever-APIs, Namensformate, Addon-Nachrichten und Chat-Sperren. /sfprobe
+## Author: Spätifreunde Spandau
+## Version: 0.1.0
+## Category: Guild
+## SavedVariables: SpaetiProbeDB
+
+Probe.lua
