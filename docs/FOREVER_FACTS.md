@@ -67,3 +67,6 @@ Still open (needs a second player online at the same time):
 - the lockdown timeline inside dungeons and boss fights;
 - system messages when guild members log in or out;
 - slash aliases `/spätiprobe` and `/SPÄTIPROBE` (`/späti` already confirmed in the main addon).
+
+## Online notice confirmed (M1, 2026-11-21)
+- When a guild member logs in, the game prints its own line `[Lava Lorenz] ist jetzt online.` and our addon adds `Späti: Lava Lorenz schlendert rin. Eene Mate, wie immer?`. The full "Vorname Nachname" displays correctly, and the roster-diff detection works.
