@@ -90,12 +90,6 @@ local function buildStart(p)
     end)
     b1:SetPoint("TOPLEFT", online, "BOTTOMLEFT", 0, -20)
 
-    local b2 = newButton(p, L.START_BTN_SPRUCH_GUILD, 140, function()
-        -- Synchronous inside the click handler (Forever chat rule).
-        ns.Chat.RunUserAction(ns.Sprueche.PostGuild)
-    end)
-    b2:SetPoint("LEFT", b1, "RIGHT", 10, 0)
-
     refreshers[#refreshers + 1] = function()
         if IsInGuild and IsInGuild() then
             online:SetText(L.START_ONLINE:format(ns.Roster.numOnline, ns.Roster.numTotal))

@@ -103,7 +103,6 @@ L.SPRUECHE = {
     "Dit Leben is keen Ponyhof.",
 }
 L.SPRUCH_LOCAL = "„%s“"
-L.SPRUCH_GUILD = "Späti-Spruch: %s"
 
 ---------------------------------------------------------------------------
 -- Gildenchat-Helfer
@@ -122,7 +121,6 @@ L.HELP_HEADER = "Befehle:"
 L.HELP_LINES = {
     "/spaeti oder /späti – Fenster öffnen/schließen",
     "/spaeti spruch – Spruch anzeigen (auch: /spruch)",
-    "/spaeti spruch gilde – Spruch in den Gildenchat (auch: /spruch gilde)",
     "/spaeti willkommen – Zuletzt eingeloggtes Mitglied begrüßen",
     "/spaeti status – Version, Gilde, Offizier, Chat-Sperre",
     "/spaeti optionen – Einstellungen öffnen",
@@ -166,7 +164,6 @@ L.START_TEXT = "Willkommen bei den Spätifreunden Spandau. Hier gibt's Sprüche,
 L.START_ONLINE = "Grad im Laden: %d von %d"
 L.START_ONLINE_NO_GUILD = "Du bist in keiner Gilde."
 L.START_BTN_SPRUCH = "Spruch zeigen"
-L.START_BTN_SPRUCH_GUILD = "Spruch in Gilde"
 
 L.POINTS_TEXT = "Spätipunkte: Bedanke dich bei Gildenmitgliedern, sammle Punkte und steig auf – von der Laufkundschaft bis zum Spätibesitzer."
 L.ONLINE_TEXT = "Hier siehst du bald, wer grad im Laden ist."

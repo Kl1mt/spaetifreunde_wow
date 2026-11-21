@@ -1,4 +1,4 @@
--- Modules/Sprueche.lua: Berlin sayings. Local display, guild post only via user action.
+-- Modules/Sprueche.lua: Berlin sayings. Local display only.
 local _, ns = ...
 
 local Sprueche = {}
@@ -40,13 +40,5 @@ function Sprueche.ShowLocal()
     local text = Sprueche.Random()
     if text then
         ns.Print(ns.L.SPRUCH_LOCAL:format(text))
-    end
-end
-
--- Posts a saying to guild chat. Must be called inside Chat.RunUserAction.
-function Sprueche.PostGuild()
-    local text = Sprueche.Random()
-    if text then
-        ns.Chat.SendGuild(ns.L.SPRUCH_GUILD:format(text))
     end
 end

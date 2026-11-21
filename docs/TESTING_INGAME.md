@@ -37,8 +37,7 @@ und Ergebnisse (✅ / ❌ + Notiz, Screenshot oder Fehlertext) zurückmelden.
 | # | Test | Erwartet | Ergebnis |
 |---|---|---|---|
 | S1 | `/spruch` und `/spaeti spruch` | Ein Berliner Spruch in Anführungszeichen, nur lokal. Mehrmals: keine direkte Wiederholung. | |
-| S2 | `/spruch gilde` und `/spaeti spruch gilde` | „Späti-Spruch: …“ erscheint im Gildenchat. | |
-| S3 | `/spruch gilde` im Dungeon / Bosskampf | Lokaler Hinweis „Der Chat ist grad gesperrt …“ **oder** Spruch wird gesendet – bitte notieren, was passiert. | |
+| S2 | `/spruch` | Niemand sonst in der Gilde sieht den Spruch. | |
 
 ### Befehle
 | # | Test | Erwartet | Ergebnis |
@@ -56,7 +55,7 @@ und Ergebnisse (✅ / ❌ + Notiz, Screenshot oder Fehlertext) zurückmelden.
 | U1 | Hauptfenster | Tabs Start, Punkte, Online, Info. Punkte/Online zeigen „Kommt bald!“. | |
 | U2 | Fenster verschieben, `/reload` | Fenster ist wieder an derselben Stelle. | |
 | U3 | ESC | Schließt das Fenster. | |
-| U4 | Start-Tab: „Spruch zeigen“ / „Spruch in Gilde“ | Lokaler Spruch bzw. Spruch im Gildenchat. | |
+| U4 | Start-Tab: „Spruch zeigen“ | Lokaler Spruch, nur für dich. | |
 | U5 | Minimap-Knopf (Getränke-Symbol) | Linksklick: Fenster; Rechtsklick: Einstellungen; ziehen: Knopf wandert am Rand. Position bleibt nach `/reload`. | |
 | U6 | Umlaute | „ä ö ü ß“ und „„…““ werden überall korrekt angezeigt (Chat, Fenster, Tooltip). | |
 | U7 | Addon-Fach (Knopf an der Minimap mit allen Addons) | Eintrag „Spätifreunde Spandau“ mit Symbol, Tooltip beim Drüberfahren, Klick öffnet Fenster. | |

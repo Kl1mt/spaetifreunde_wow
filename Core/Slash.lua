@@ -44,13 +44,8 @@ local function printStatus()
     end
 end
 
-local function spruch(rest)
-    if Util.Lower(rest or "") == "gilde" then
-        -- Slash handler = direct user action.
-        ns.Chat.RunUserAction(ns.Sprueche.PostGuild)
-    else
-        ns.Sprueche.ShowLocal()
-    end
+local function spruch()
+    ns.Sprueche.ShowLocal()
 end
 
 local commands = {

@@ -9,7 +9,7 @@
 - **Begrüßung beim Einloggen** – ein zufälliger Berliner Spruch im eigenen Chatfenster.
 - **Online-Meldung** – wenn jemand aus der Gilde reinkommt, siehst du es lokal.
   Mit einem Klick auf **[Willkommen sagen]** grüßt du im Gildenchat (nie automatisch!).
-- **`/spruch`** – rund 40 Berliner Sprüche. `/spruch gilde` postet einen in den Gildenchat.
+- **`/spruch`** – rund 40 Berliner Sprüche. Werden nur dir angezeigt.
 - **Hauptfenster** mit Tabs (Start, Punkte, Online, Info), Minimap-Knopf und Eintrag im Addon-Fach.
 - **Einstellungen** im Spielmenü (Optionen → AddOns → Spätifreunde Spandau).
 
@@ -37,7 +37,6 @@
 |---|---|
 | `/spaeti` oder `/späti` | Hauptfenster öffnen/schließen |
 | `/spaeti spruch` bzw. `/spruch` | Spruch lokal anzeigen |
-| `/spaeti spruch gilde` bzw. `/spruch gilde` | Spruch in den Gildenchat posten |
 | `/spaeti willkommen` | Zuletzt eingeloggtes Mitglied im Gildenchat begrüßen |
 | `/spaeti status` | Version, Interface, Gilde, Offizier, Chat-Sperre |
 | `/spaeti optionen` | Einstellungen öffnen |
