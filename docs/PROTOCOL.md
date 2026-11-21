@@ -71,6 +71,13 @@ just send more.
 
 Measured in the mock (`tests/`): 11 peers, 627 entries. A fresh client converged in about 185 s with 157 `E` + 1 `H` + 2 `D` + 2 `R` messages and 0 throttle results.
 
+`tests/test_storm.lua` (periodic HELLO shortened to 60–120 s so several land during the catch-up):
+
+| Scenario | before these rules | now |
+|---|---|---|
+| 12 peers with 7000 identical entries + 1 fresh client (minimum 1752 `E`) | 16413 `E`, 587 `D`, 373 `R` | 2051 `E`, 103 `D`, 14 `R` |
+| mass login of 13 clients, each with 4 entries the others lack | 296 `D`, 170 `R`, 259 `E` | 94 `D`, 62 `R`, 128 `E` |
+
 ## Rules applied at derivation time (same result on every client)
 1. A void counts only if its author is an officer **in the current roster** (guild master, or rank name `Officer`).
 2. Voided thanks are removed before the limits are applied, so a voided thank frees its daily slot.

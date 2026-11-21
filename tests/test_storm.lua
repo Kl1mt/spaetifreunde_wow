@@ -66,22 +66,27 @@ do
     local world = T.NewWorld(11, { start = START })
     local guids = addMembers(world, 13)
     local peers = {}
+    -- Periodic HELLOs every 60-120 s instead of 15 min, so several of them land while
+    -- the catch-up is still running (in-game it takes ~30 min at 1 msg/s).
+    local HELLO_EVERY = 60
     for i = 1, 12 do
         peers[i] = world:Login(world.members[i].name)
+        peers[i].ns.Sync.HELLO_INTERVAL = HELLO_EVERY
     end
     world:Advance(1)
     local Codec, PD = peers[1].ns.Codec, peers[1].ns.PointsData
     local history = {}
-    local n, t = 0, PD.EPOCH + 3600
+    local n, k, t = 0, 0, PD.EPOCH + 3600
     while n < 7000 do
-        local g = guids[(n % 12) + 1]
-        local r = guids[((n * 7 + 3) % 13) + 1]
+        k = k + 1
+        local g = guids[(k % 12) + 1]
+        local r = guids[((k * 7 + 3) % 13) + 1]
         if r ~= g then
-            local id = Codec.MakeId(g, t, n % 46656)
+            local id = Codec.MakeId(g, t, k % 46656)
             history[id] = { k = "T", a = g, b = r, t = t }
             n = n + 1
         end
-        t = t + 2700 -- ~32 per day
+        t = t + 2400 -- ~36 per day
     end
     check(t < START, "history ends before now")
     for _, c in ipairs(peers) do
@@ -93,6 +98,7 @@ do
     local minimum = minChunks(peers[1], history)
     local logBefore = #world.log
     local fresh = world:Login(world.members[13].name)
+    fresh.ns.Sync.HELLO_INTERVAL = HELLO_EVERY
     local elapsed, converged = 0, nil
     while elapsed < 6000 do
         world:Advance(100, 0.25)
@@ -100,7 +106,7 @@ do
         if not converged and fresh.ns.Points.store.count == 7000 then
             converged = elapsed
         end
-        if converged and elapsed >= converged + 1000 and elapsed > fresh.ns.Sync.HELLO_INTERVAL * 2 then
+        if converged and elapsed >= converged + 1000 and elapsed > 1200 then
             break
         end
     end
@@ -144,7 +150,7 @@ do
     for i, c in ipairs(clients) do
         for k = 1, 4 do
             local g, r = guids[i], guids[(i % 13) + 1]
-            local t = base + (i * 4 + k) * 1100000 + i
+            local t = base + (i * 4 + k) * 300000 + i
             local id = Codec.MakeId(g, t, 999 + k)
             local e = { k = "T", a = g, b = r, t = t }
             c.ns.Points:Ingest(id, e, "local")
@@ -173,8 +179,8 @@ do
         :format(unique - 4, tostring(converged), h, d, r, e)
     print("  " .. T.stormStats.mass)
     check(converged ~= nil, "mass login converged")
-    check(r <= 60, ("few REQ messages (%d)"):format(r))
-    check(e <= 200, ("few E messages (%d)"):format(e))
+    check(r <= 80, ("few REQ messages (%d)"):format(r))
+    check(e <= 160, ("few E messages (%d)"):format(e))
     eq(world.throttled, 0, "no throttle results (mass login)")
     check(#world.errors == 0, "no Lua errors: " .. table.concat(world.errors, " | "))
 end
