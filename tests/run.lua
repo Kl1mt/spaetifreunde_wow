@@ -3,7 +3,7 @@ local root = (arg and arg[0] or ""):match("^(.-)tests/run%.lua$") or "./"
 package.path = root .. "tests/?.lua;" .. package.path
 
 local T = require("helpers.wow")
-for _, name in ipairs({ "test_logic", "test_sync" }) do
+for _, name in ipairs({ "test_logic", "test_sync", "test_storm" }) do
     local before = T.failures
     local chunk = assert(loadfile(root .. "tests/" .. name .. ".lua"))
     local ok, err = pcall(chunk)

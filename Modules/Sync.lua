@@ -22,14 +22,21 @@ Sync.HELLO_INTERVAL = 900 -- periodic HELLO (15 min) plus jitter
 Sync.REPLY_JITTER_MIN = 1
 Sync.REPLY_JITTER_MAX = 5
 Sync.SEEN_TTL = 60 -- seconds a DAYS part from someone else suppresses our identical one
+Sync.E_TTL = 45 -- new entries of a month arrived this recently -> we are still catching up
+Sync.PUSH_TTL = 30 -- someone else sent entries of a day this recently -> don't send that day too
+Sync.REQ_TTL = 120 -- a REQ for a day is outstanding this long (or while new entries keep arriving)
 
 Sync.lastHello = nil -- server time of our last HELLO
 Sync.lastData = nil -- server time we last received sync entries
 Sync.lastNew = nil -- server time we last received a new entry
 
 local pendingDays = {} -- target .. mk -> true
-local seenDays = {} -- raw DAYS message -> GetTime()
+local seenDays = {} -- target GUID -> { [raw DAYS message from someone else] = GetTime() }
 local pushed = {} -- mk .. "/" .. day -> Comm ticket of the last chunk queued for that day
+local lastE, lastEFrom = {}, {} -- mk .. "/" .. day -> GetTime() / sender of the last E with that day
+local lastAdd = {} -- mk -> GetTime() an E last brought us new entries of that month
+local lastAddAny -- GetTime() an E last brought us new entries at all
+local requested = {} -- mk .. "/" .. day -> GetTime() we sent a REQ for that day
 local helloLoopStarted = false
 
 local function serverNow()
@@ -54,6 +61,29 @@ end
 
 local function store()
     return ns.Points.store
+end
+
+local function recent(at, ttl, t)
+    return at ~= nil and t - at < ttl
+end
+
+-- A REQ we sent for this day is still being answered.
+local function outstanding(key, t)
+    return requested[key] ~= nil
+        and (t - requested[key] < Sync.REQ_TTL or recent(lastAddAny, Sync.E_TTL, t))
+end
+
+-- We are catching up on this month ourselves: entries are arriving or were requested.
+local function monthBusy(mk, t)
+    if recent(lastAdd[mk], Sync.E_TTL, t) then
+        return true
+    end
+    for d = 1, 31 do
+        if outstanding(mk .. "/" .. d, t) then
+            return true
+        end
+    end
+    return false
 end
 
 -- Parse "key:count:hash,key:count:hash" -> key -> "count:hash"
@@ -114,13 +144,18 @@ local function buildDays(targetGuid, mk)
 end
 Sync.BuildDays = buildDays
 
--- Push our entries of the given days (bulk queue). Days whose entries are still
--- waiting in our queue are skipped: that broadcast will reach everyone anyway.
-function Sync.SendEntries(mk, days)
+-- Push our entries of the given days (bulk queue) for `peer`. Skipped days:
+--  * still waiting in our queue: that broadcast will reach everyone anyway;
+--  * someone other than `peer` sent entries of that day within PUSH_TTL: a dump of
+--    that day is already on the air (leftovers are picked up by the next HELLO).
+function Sync.SendEntries(mk, days, peer)
     local s = store()
+    local t = clock()
     local wanted = {}
     for d in pairs(days) do
-        if not Comm.IsPending(pushed[mk .. "/" .. d]) then
+        local key = mk .. "/" .. d
+        local onAir = recent(lastE[key], Sync.PUSH_TTL, t) and lastEFrom[key] ~= peer
+        if not Comm.IsPending(pushed[key]) and not onAir then
             wanted[d] = true
         end
     end
@@ -152,11 +187,10 @@ local function scheduleDays(targetGuid, mk)
             return
         end
         local t = clock()
+        local seen = seenDays[targetGuid] or {}
         for _, msg in ipairs(buildDays(targetGuid, mk)) do
-            local seen = seenDays[msg]
-            -- Someone with identical data already answered this part -> stay quiet.
-            if not (seen and t - seen < Sync.SEEN_TTL) then
-                seenDays[msg] = t
+            -- Someone else with identical data already answered this part -> stay quiet.
+            if not recent(seen[msg], Sync.SEEN_TTL, t) then
                 Comm.Send(msg)
             end
         end
@@ -175,11 +209,16 @@ local function onHello(sender, fields)
     if not (from and to and from:match("^%d%d%d%d$") and to:match("^%d%d%d%d$")) or from > to then
         return
     end
+    -- A new HELLO is a new question (e.g. after /reload): earlier answers don't count.
+    seenDays[sender] = nil
     local theirs = parseSummaries(list)
     local mine = s:MonthSummaries()
+    local t = clock()
     local mk, guard = from, 0
     while mk <= to and guard < 1200 do
-        if sumString(mine[mk]) ~= theirs[mk] then
+        -- While we are catching up on a month ourselves our answer would only make the
+        -- sender dump the days we still lack (they are on the air anyway). Skip it.
+        if sumString(mine[mk]) ~= theirs[mk] and not monthBusy(mk, t) then
             scheduleDays(sender, mk)
         end
         mk = PD.NextMonth(mk)
@@ -200,11 +239,14 @@ local function onDays(sender, fields, _, raw)
     end
     if target ~= ns.Roster:MyGUID() then
         -- Remember for suppression of our own identical answer.
-        seenDays[raw] = clock()
+        local box = seenDays[target] or {}
+        seenDays[target] = box
+        box[raw] = clock()
         return
     end
     local theirs = parseSummaries(fields[5])
     local mine = s:DaySummaries(mk)
+    local t = clock()
     local push, req, anyReq = {}, {}, false
     for d = math.max(1, from), math.min(31, to) do
         local m, th = sumString(mine[d]), theirs[tostring(d)]
@@ -212,14 +254,18 @@ local function onDays(sender, fields, _, raw)
             if m then
                 push[d] = true
             end
-            if th then
+            -- Each day is requested from one DAYS sender only, and not again while
+            -- that request is still being answered.
+            local key = mk .. "/" .. d
+            if th and not outstanding(key, t) then
+                requested[key] = t
                 req[#req + 1] = d
                 anyReq = true
             end
         end
     end
     if next(push) then
-        Sync.SendEntries(mk, push)
+        Sync.SendEntries(mk, push, sender)
     end
     if anyReq then
         local header = Codec.Build("R", Codec.ShortGUID(sender), mk)
@@ -233,7 +279,7 @@ local function onDays(sender, fields, _, raw)
     end
 end
 
-local function onRequest(_, fields)
+local function onRequest(sender, fields)
     local s = store()
     if not s then
         return
@@ -251,19 +297,26 @@ local function onRequest(_, fields)
         end
     end
     if next(days) then
-        Sync.SendEntries(mk, days)
+        Sync.SendEntries(mk, days, sender)
     end
 end
 
-local function onEntries(_, fields)
+local function onEntries(sender, fields)
     if not store() then
         return
     end
     local added = 0
+    local t = clock()
     for _, item in ipairs(Codec.Split(fields[1] or "", Codec.LIST_SEP)) do
         local id, e = Codec.DecodeEntry(item)
-        if id and ns.Points:Ingest(id, e, "sync") then
-            added = added + 1
+        if id and type(e.t) == "number" then
+            local mk, day = PD.MonthDay(e.t)
+            local key = mk .. "/" .. day
+            lastE[key], lastEFrom[key] = t, sender
+            if ns.Points:Ingest(id, e, "sync") then
+                added = added + 1
+                lastAdd[mk], lastAddAny = t, t
+            end
         end
     end
     Sync.lastData = serverNow()

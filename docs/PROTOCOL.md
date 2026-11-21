@@ -7,13 +7,14 @@ Protocol version **1**. Code: `Core/Codec.lua` (format), `Core/Comm.lua` (transp
 - Prefix `SpaetiFreunde`, channel `GUILD` only. Nothing is ever sent to visible chat.
 - `CHAT_MSG_ADDON` sender = `"Vorname Nachname"`, which is the roster name (confirmed). It is mapped to a GUID through the roster cache. If the sender is unknown or is ourselves (our own echo, detected by GUID), the message is ignored.
 - **Send queue** with a token bucket: 8 burst, 1 token per second. The server allows 10 burst, then returns `3 AddonMessageThrottle`. Two queues: *high* for N/H/D/R and *bulk* for E chunks. A throttle result puts the message back and empties the bucket.
-- **Gate:** nothing is sent while any of these is true. The queue is kept and pauses instead.
-  - `C_ChatInfo.InChatMessagingLockdown()`
-  - `C_ChatInfo.AreOutgoingAddonChatMessagesRestricted()`
-  - `C_RestrictedActions.IsAddOnRestrictionActive(Enum.AddOnRestrictionType.Chat)`
-  - send result `11 AddOnMessageLockdown`
+- **Gate:** the queue is kept and pauses instead of sending when
+  - `C_ChatInfo.InChatMessagingLockdown()` returns exactly `true` (checked before sending), or
+  - a send returns `11 AddOnMessageLockdown` (the real lockdown signal).
 
-  The queue resumes on `ADDON_RESTRICTION_STATE_CHANGED` or on a 5 s retry timer.
+  `AreOutgoingAddonChatMessagesRestricted()` and `IsAddOnRestrictionActive(Chat)` are only shown in
+  `/spaeti status` (unverified on Forever, they reported "restricted" while sending worked).
+  The queue retries every 5 s and right away on `ADDON_RESTRICTION_STATE_CHANGED` (one retry timer
+  at a time, however often the event fires). It stays *paused* until a send succeeds again.
 - Every message is at most 255 bytes, plain printable ASCII.
 
 ## Message format
@@ -46,9 +47,17 @@ V:<id>:<officerGUID>:<targetId>:<time36>       officer void of thank <targetId>
 |---|---|---|---|
 | `N` | `entry` | author, once | New thank or void. **Accepted only if sender GUID == entry author.** |
 | `H` | `fromMonth~toMonth~mk:count:hash,...` | everyone, 10–40 s after login, then every 15 min (+0–60 s) | HELLO: summary per Berlin month `YYMM` from 2611 to the current month. A month in the range but missing from the list has 0 entries. Split into several messages if needed; each covers its own range. |
-| `D` | `target~mk~fromDay~toDay~dd:count:hash,...` | peers whose month summary differs from a HELLO, after 1–5 s jitter | DAYS: our per-day summary of month `mk` for the HELLO sender `target`. **Suppression:** if an identical DAYS part from someone else was already seen (60 s), ours is not sent. |
-| `R` | `target~mk~dd,dd,...` | the HELLO sender, after a DAYS | REQ: "`target`, please send your entries of these days". Only days where `target` has entries and our summary differs. |
-| `E` | `entry,entry,...` | the HELLO sender (days where it has entries and the summaries differ), and the `R` target | ENTRIES: relayed entries in chunks ≤ 255 bytes. **Accepted from any guild member.** Entries for days that are still waiting in our queue are not queued twice. |
+| `D` | `target~mk~fromDay~toDay~dd:count:hash,...` | peers whose month summary differs from a HELLO, after 1–5 s jitter | DAYS: our per-day summary of month `mk` for the HELLO sender `target`. **Suppression:** if an identical DAYS part from someone else for the same target was seen (60 s), ours is not sent. A new HELLO from the target clears that (e.g. after `/reload`). **Not sent while we catch up on `mk` ourselves** (see below). |
+| `R` | `target~mk~dd,dd,...` | the HELLO sender, after a DAYS | REQ: "`target`, please send your entries of these days". Only days where `target` has entries and our summary differs. **Each day is requested from one DAYS sender only**, and not again while that request is outstanding (sent < 120 s ago, or new entries still arrived within 45 s). |
+| `E` | `entry,entry,...` | the HELLO sender (days where it has entries and the summaries differ), and the `R` target | ENTRIES: relayed entries in chunks ≤ 255 bytes. **Accepted from any guild member.** Not queued again: days still waiting in our queue, and days for which someone other than the peer we answer sent `E` within 30 s (that dump is already on the air). |
+
+**Catching up** on month `mk` means: an `E` brought us new entries of `mk` within 45 s, or one of
+our `R` for a day of `mk` is outstanding. While catching up we don't answer HELLOs for `mk`: our
+answer would only make the HELLO sender dump the days we still lack, which are on the air anyway.
+
+Anything skipped by these rules is picked up by the next HELLO (every 15 min). They only change
+*when* a client sends, not the message formats: clients without them still interoperate, they
+just send more.
 
 `count:hash` = number of ids plus the sum of `djb2(id)` mod 2³², base36. The sum doesn't depend on order, and every client computes it identically.
 

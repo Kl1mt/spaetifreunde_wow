@@ -4,6 +4,23 @@ Alle nennenswerten Änderungen am Addon stehen hier.
 
 ## [Unveröffentlicht]
 
+### Behoben – Spätipunkte-Abgleich und Meldungen
+- Kein Nachrichtensturm mehr beim Nachholen großer Verläufe: Wer selbst noch nachholt, beantwortet
+  keine HELLOs für diesen Monat, und Tage, die gerade jemand anderes sendet, werden nicht doppelt
+  gesendet.
+- Jeder fehlende Tag wird nur bei einem Mitglied angefragt (vorher bei jedem, das geantwortet hat).
+- Nach `/reload` wird das neue HELLO sofort wieder beantwortet (vorher bis zu 15 Minuten Warten).
+- Sendewarteschlange: Jedes `ADDON_RESTRICTION_STATE_CHANGED` startete einen weiteren dauerhaften
+  Wiederholungs-Timer; jetzt gibt es immer nur einen. Während einer Sperre bleibt die Anzeige
+  „pausiert“, bis wieder etwas gesendet werden konnte (kein Flackern).
+- Namenssuche bei `/spaeti danke`: Ein genau passender Vor- oder Nachname schlägt einen bloßen
+  Namensanfang („Lorenz“ findet „Lava Lorenz“, nicht „Lorenzo Rossi“). Mehrere Treffer derselben
+  Stufe ergeben eine Auswahl.
+- Nachholen nach Neuinstallation, neuem PC oder langer Pause: eine Sammelmeldung statt vieler
+  einzelner, und nur der erreichte Rang wird gemeldet. Bei Neuinstallation wird der Rang still
+  übernommen (keine Aufstiegsmeldungen für alte Punkte).
+- „Ton bei Dankeschön“ funktioniert jetzt auch, wenn „Dankeschön-Meldungen“ aus sind.
+
 ### Neu – M2 „Stammkunde“ (Spätipunkte)
 - `/spaeti danke <Name>`: bei Gildenmitgliedern bedanken (+1 Spätipunkt). Name voll oder eindeutiger
   Anfang/Vorname, Groß-/Kleinschreibung egal; bei mehreren Treffern kommt eine Auswahl.
