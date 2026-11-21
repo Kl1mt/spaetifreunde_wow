@@ -41,7 +41,7 @@ read_globals = {
     "InCombatLockdown", "IsInInstance", "IsLoggedIn",
     "UnitGUID", "UnitName", "UnitFullName",
     "C_AddOns", "GetAddOnMetadata",
-    "C_Timer", "C_ChatInfo", "SendChatMessage",
+    "C_Timer", "C_ChatInfo", "SendChatMessage", "C_RestrictedActions", "Enum", "C_Club",
     -- Guild
     "IsInGuild", "GetGuildInfo", "IsGuildLeader", "GetNumGuildMembers", "GetGuildRosterInfo",
     "C_GuildInfo", "GuildRoster", "Ambiguate",

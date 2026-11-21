@@ -10,10 +10,15 @@ DB.defaults = {
         onlineGreeting = true,
         greetInInstances = false,
         showMinimap = true,
+        thanksNotice = true,
+        thanksSound = true,
     },
     minimap = { angle = 200 },
     window = {}, -- point, relativePoint, x, y
-    guilds = {}, -- per-guild data (S3+), keyed by guild key
+    -- Per-guild data, keyed by Roster:GuildKey() ("club:<id>" or "name:<guild>"):
+    --   entries = { [id] = { k = "T"|"V", a = authorGUID, b = receiverGUID|targetId, t = serverTime } }
+    --   names = { [guid] = display name }, lastRank = { [myGuid] = rank index }
+    guilds = {},
 }
 
 -- migrations[n] upgrades a table from schema n-1 to schema n.
@@ -21,6 +26,17 @@ DB.defaults = {
 DB.migrations = {
     [1] = function(_)
         -- 0 -> 1: first schema; nothing to convert yet.
+    end,
+    [2] = function(data)
+        -- 1 -> 2: Spätipunkte. Make sure every guild table has an entry set.
+        if type(data.guilds) ~= "table" then
+            data.guilds = {}
+        end
+        for _, g in pairs(data.guilds) do
+            if type(g) == "table" and type(g.entries) ~= "table" then
+                g.entries = {}
+            end
+        end
     end,
 }
 

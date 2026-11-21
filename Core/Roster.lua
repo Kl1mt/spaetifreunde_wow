@@ -10,6 +10,7 @@ local REQUEST_THROTTLE = 20 -- seconds between roster requests
 local REFRESH_INTERVAL = 60 -- periodic refresh while in a guild
 
 Roster.members = {} -- guid -> entry
+Roster.byName = {} -- roster name ("Vorname Nachname") -> guid
 Roster.numTotal = 0
 Roster.numOnline = 0
 Roster.ready = false -- true after the first (baseline) scan
@@ -49,7 +50,7 @@ end
 
 -- Scan GetGuildRosterInfo into a fresh table; returns members, total, online.
 local function scan()
-    local members, online = {}, 0
+    local members, byName, online = {}, {}, 0
     local total = GetNumGuildMembers and GetNumGuildMembers() or 0
     total = tonumber(Util.SafeText(total)) or 0
     for i = 1, total do
@@ -75,27 +76,29 @@ local function scan()
                 index = i,
             }
             members[guid] = entry
+            byName[name] = guid
             if entry.online then
                 online = online + 1
             end
         end
     end
     -- Officer notes are deliberately never stored.
-    return members, total, online
+    return members, total, online, byName
 end
 
 function Roster:OnRosterUpdate()
     if not (IsInGuild and IsInGuild()) then
-        self.members, self.numTotal, self.numOnline = {}, 0, 0
+        self.members, self.byName, self.numTotal, self.numOnline = {}, {}, 0, 0
         return
     end
-    local members, total, online = scan()
+    local members, total, online, byName = scan()
     if total > 0 and next(members) == nil then
         return -- data not loaded yet; keep old cache
     end
     local old = self.members
     local wasReady = self.ready
     self.members, self.numTotal, self.numOnline = members, total, online
+    self.byName = byName
     self.ready = true
 
     local myGuid = UnitGUID and Util.SafeText(UnitGUID("player"))
@@ -124,6 +127,39 @@ end
 
 function Roster:Get(guid)
     return self.members[guid]
+end
+
+-- CHAT_MSG_ADDON sender ("Vorname Nachname", confirmed identical to the roster name) -> GUID.
+function Roster:GuidByName(name)
+    return self.byName[name]
+end
+
+function Roster:MyGUID()
+    return UnitGUID and Util.SafeText(UnitGUID("player")) or nil
+end
+
+-- Array of all cached members (for name matching / lists).
+function Roster:List()
+    local list = {}
+    for _, entry in pairs(self.members) do
+        list[#list + 1] = entry
+    end
+    table.sort(list, function(a, b) return a.name < b.name end)
+    return list
+end
+
+-- Stable guild key for per-guild data: club id if available, else guild name.
+-- Confirmed: C_Club.GetGuildClubId() = 215755322 for our guild.
+function Roster:GuildKey()
+    if C_Club and type(C_Club.GetGuildClubId) == "function" then
+        local ok, id = pcall(C_Club.GetGuildClubId)
+        id = ok and Util.SafeText(id)
+        if id then
+            return "club:" .. id
+        end
+    end
+    local name = self:GuildName()
+    return name and ("name:" .. name) or nil
 end
 
 -- Own guild name (nil if not in a guild).

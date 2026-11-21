@@ -2,7 +2,7 @@
 local ADDON_NAME, ns = ...
 
 ns.ADDON_NAME = ADDON_NAME
-ns.SCHEMA_VERSION = 1
+ns.SCHEMA_VERSION = 2
 
 -- Version from TOC metadata (C_AddOns in modern clients, global fallback).
 do
@@ -55,7 +55,8 @@ end)
 ---------------------------------------------------------------------------
 -- Internal messages: ns:On("SF_MEMBER_ONLINE", fn) / ns:Fire(msg, ...)
 --   SF_DB_READY, SF_LOGIN, SF_ROSTER_UPDATED, SF_MEMBER_ONLINE(guid, entry),
---   SF_MEMBER_OFFLINE(guid, entry), SF_SETTING_CHANGED(key, value)
+--   SF_MEMBER_OFFLINE(guid, entry), SF_SETTING_CHANGED(key, value),
+--   SF_POINTS_BOUND, SF_POINTS_UPDATED, SF_SYNC_STATE, SF_COMM_STATE
 ---------------------------------------------------------------------------
 local messageHandlers = {}
 
