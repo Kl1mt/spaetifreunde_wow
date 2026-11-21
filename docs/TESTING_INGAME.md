@@ -50,7 +50,7 @@ und Ergebnisse (✅ / ❌ + Notiz, Screenshot oder Fehlertext) zurückmelden.
 ### Fenster, Minimap, Addon-Fach
 | # | Test | Erwartet | Ergebnis |
 |---|---|---|---|
-| U1 | Hauptfenster | Tabs Start, Punkte, Online, Info. Punkte/Online zeigen „Kommt bald!“. | |
+| U1 | Hauptfenster | Tabs Start, Punkte, Online, Info. Online zeigt „Kommt bald!“ (Punkte: siehe M2). | |
 | U2 | Fenster verschieben, `/reload` | Fenster ist wieder an derselben Stelle. | |
 | U3 | ESC | Schließt das Fenster. | |
 | U4 | Start-Tab: „Spruch zeigen“ | Lokaler Spruch, nur für dich. | |
@@ -62,11 +62,69 @@ und Ergebnisse (✅ / ❌ + Notiz, Screenshot oder Fehlertext) zurückmelden.
 ### Einstellungen
 | # | Test | Erwartet | Ergebnis |
 |---|---|---|---|
-| O1 | Esc → Optionen → AddOns → Spätifreunde Spandau (oder `/spaeti optionen`) | Vier Häkchen: Begrüßung, Online-Meldungen, Instanzen, Minimap-Knopf. | |
+| O1 | Esc → Optionen → AddOns → Spätifreunde Spandau (oder `/spaeti optionen`) | Sechs Häkchen: Begrüßung, Online-Meldungen, Instanzen, Minimap-Knopf, Dankeschön-Meldungen, Ton bei Dankeschön. | |
 | O2 | Häkchen ändern, ausloggen, einloggen | Einstellungen bleiben erhalten. | |
 | O3 | „Begrüßung beim Einloggen“ aus, `/reload` | Keine Begrüßungszeile mehr. | |
 | O4 | „Minimap-Knopf anzeigen“ aus | Knopf verschwindet sofort. | |
 | O5 | Info-Tab im Fenster und Optionsmenü gleichzeitig offen, Häkchen im Info-Tab ändern | Das Optionsmenü zeigt sofort denselben Stand (und umgekehrt). | |
+
+---
+
+## M2 „Stammkunde“ – Spätipunkte
+
+**Vorbereitung:** mindestens **2 Spieler** (besser 3) mit der neuen Version. Ideal: einer mit
+**deutschem** und einer mit **englischem** Client (enUS), dazu ein Offizier bzw. der Gildenmeister.
+Wer ist A/B/C? Bitte in den Ergebnissen notieren (Name, Client-Sprache, Rang).
+Nach jedem Test-Block kurz `/spaeti status` ansehen (Zeile „Spätipunkte: … Einträge, Warteschlange …,
+Drossel …“). **Drossel** sollte immer 0 bleiben.
+
+### Bedanken
+| # | Test | Erwartet | Ergebnis |
+|---|---|---|---|
+| P1 | A: `/spaeti danke <Vorname von B>` | A sieht „Danke an … ist raus (+1 Spätipunkt). Heute noch 2 übrig.“ B sieht **lokal** z. B. „A hat sich bei dir bedankt! +1 Spätipunkt.“ plus kurzen Ton. **Im Gildenchat erscheint nichts.** | |
+| P2 | A: `/spaeti danke <voller Name von B in Kleinbuchstaben>` | „Bei B hast du dich heute schon bedankt.“ (1× pro Person und Tag) | |
+| P3 | A: sich selbst danken | „Bei dir selbst bedanken? Nee …“ | |
+| P4 | A: `/spaeti danke` mit nur 1–2 Buchstaben, die auf mehrere passen | Liste „Mehrere passen: …“ mit Namen | |
+| P5 | A: `/spaeti danke Quatschname` | „Keen Gildenmitglied „Quatschname“ gefunden.“ | |
+| P6 | A dankt zwei weiteren Leuten (auch Offline-Mitglieder gehen), dann einer vierten Person | Die vierte wird abgelehnt: „Du hast heute schon 3-mal Danke gesagt …“ | |
+| P7 | Name mit Umlaut (falls vorhanden), z. B. `/spaeti danke jürgen` bzw. `JÜRGEN` | Wird gefunden | |
+| P8 | Punkte-Tab bei A, B, C vergleichen | Alle sehen **dieselben** Punktzahlen in der Rangliste und denselben „Stammkunde des Monats“ | |
+
+### Punkte-Tab
+| # | Test | Erwartet | Ergebnis |
+|---|---|---|---|
+| T1 | `/spaeti punkte` bzw. Tab „Punkte“ | Eigene Punkte + Rang (z. B. „Laufkundschaft“), Balken + „Noch X bis …“, Stammkunde des Monats, Rangliste (alle Mitglieder), letzte Dankeschöns, Sync-Zeile unten | |
+| T2 | Name in der Rangliste anklicken, dann „Danke!“ (oder Enter) | Name steht im Eingabefeld; Danke wird wie per Befehl verschickt | |
+| T3 | Mausrad / Pfeile über der Rangliste und den letzten Dankeschöns | Liste scrollt; keine Lua-Fehler. Falls die Pfeile fehlen oder komisch aussehen: Screenshot | |
+| T4 | Sync-Zeile nach ca. 1 Minute | „Sync: bereit · N Einträge · zuletzt …“ | |
+| T5 | Optionen: „Dankeschön-Meldungen“ / „Ton bei Dankeschön“ aus, B dankt dir | Keine Chatzeile bzw. kein Ton; Punkte zählen trotzdem | |
+| T6 | Fenstergröße, Umlaute, Texte | Alles lesbar, nichts abgeschnitten (sonst Screenshot) | |
+
+### Offline-Mitglied holt auf (Sync)
+| # | Test | Erwartet | Ergebnis |
+|---|---|---|---|
+| Y1 | C ist **offline**. A und B danken C (und sich gegenseitig – am nächsten Tag geht's wieder) | – | |
+| Y2 | C loggt ein, ca. **1 Minute** warten | C sieht „X hat sich bei dir bedankt“ (bzw. „Während du weg warst: N neue Dankeschöns“). Rangliste bei C = Rangliste bei A und B | |
+| Y3 | A loggt aus, B dankt jemandem, A loggt wieder ein (1 Minute warten) | A hat den neuen Eintrag (Einträge-Zahl in `/spaeti status` bei allen gleich) | |
+| Y4 | `/reload` bei allen | Punkte bleiben erhalten | |
+| Y5 | Jemand mit der **alten** Addon-Version (M1) online | Keine Fehler bei irgendwem | |
+
+### Offiziere
+| # | Test | Erwartet | Ergebnis |
+|---|---|---|---|
+| V1 | Normales Mitglied: Punkte-Tab | Keine „Storno“-Knöpfe bei den letzten Dankeschöns | |
+| V2 | Offizier/Gildenmeister: Punkte-Tab | „Storno“-Knopf je Zeile. Einmal klicken → „Sicher?“, nochmal klicken → „Dankeschön von X an Y storniert.“ | |
+| V3 | Nach dem Storno (ca. 5 Sekunden) | Bei **allen** zählt der Punkt nicht mehr; der Eintrag verschwindet aus „Letzte Dankeschöns“ | |
+| V4 | Wer storniert hat, verliert den Offiziersrang (nur wenn ihr das testen wollt) | Das Storno zählt dann nicht mehr (Punkt ist wieder da) – so gewollt | |
+
+### Tagesgrenze, Sperren, Sprachen
+| # | Test | Erwartet | Ergebnis |
+|---|---|---|---|
+| D1 | Nach **Mitternacht (Berliner Zeit)** | Wieder 3 Dankeschöns möglich, auch an dieselbe Person wie gestern | |
+| D2 | In einem **Dungeon** (und wenn möglich im Bosskampf) jemandem danken | Entweder sofort verschickt, oder Hinweis „Chat-Sperre aktiv – wird verschickt, sobald es wieder geht“ und nach dem Kampf/Dungeon kommt es an. **Bitte notieren, was passiert** (und `/spaeti status` → „Chat-Sperre: ja/nein“ im Dungeon/Bosskampf) | |
+| D3 | enUS-Client bedankt sich bei deDE-Client und umgekehrt | Funktioniert in beide Richtungen; Texte bleiben deutsch | |
+| D4 | Allgemein | Das Addon postet **nie** etwas in Gilde/Sagen/Schreien | |
+| D5 | Ende: `/spaeti status` bei allen | Zeile „Spätipunkte: …“ – bitte kopieren. „Drossel“ sollte 0 sein | |
 
 ---
 
