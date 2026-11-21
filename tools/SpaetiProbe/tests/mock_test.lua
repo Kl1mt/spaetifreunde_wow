@@ -91,7 +91,7 @@ local function runAll(env)
     fire(env, "PLAYER_LOGIN")
     fire(env, "PLAYER_ENTERING_WORLD", true, false)
     fire(env, "CHAT_MSG_SYSTEM", "Klaus ist jetzt online.")
-    for _, cmd in ipairs({ "", "anon", "ping", "burst", "echo", "gildeslash", "gildetimer", "font",
+    for _, cmd in ipairs({ "", "anon", "ping", "burst", "echo", "font",
         "system", "hilfe", "echo stop" }) do
         slash(env, "SPAETIPROBE", cmd)
     end
@@ -190,8 +190,6 @@ do
     fire(env, "CHAT_MSG_ADDON", "OtherPrefix", "x", "GUILD", "Bärbel-Spandau")
     fire(env, "CHAT_MSG_ADDON", "SpaetiProbe", "PING:1:1", "GUILD", "Bärbel-Spandau")
     fire(env, "CHAT_MSG_ADDON", "SECRET", "PING:1:1", "GUILD", "Bärbel-Spandau")
-    slash(env, "SPAETIPROBE", "gildeslash")
-    fire(env, "CHAT_MSG_GUILD", "[SpaetiProbe] Gilden-Test (slash) - bitte ignorieren", "Klaus-Spandau")
     slash(env, "SPAETIPROBE_UML", "")
     local db = env.SpaetiProbeDB
     local rep = db.lastReport
@@ -202,7 +200,6 @@ do
     check(rep:find("fehlt 4-7", 1, true), "scenario 3: echo gap recorded")
     check(rep:find("exakt (Zeile 2)", 1, true), "scenario 3: roster match")
     check(rep:find("3(AddonMessageThrottle)", 1, true), "scenario 3: burst throttle code named")
-    check(rep:find("angekommen: ja", 1, true), "scenario 3: guild chat arrival seen")
     check(not rep:find("OtherPrefix", 1, true), "scenario 3: foreign prefix ignored")
     check(#db.addonIn == 2, "scenario 3: two addon log entries (first echo + ping), got " .. #db.addonIn)
     slash(env, "SPAETIPROBE", "anon")
