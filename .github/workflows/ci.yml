@@ -25,6 +25,8 @@ jobs:
             | xargs -0 -n1 luac5.1 -p
       - name: luacheck
         run: luacheck .
+      - name: Unit + sync tests (plain Lua 5.1 with WoW mocks)
+        run: lua5.1 tests/run.lua
       - name: Encoding check (no BOM, no CRLF)
         run: |
           bad=0
