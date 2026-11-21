@@ -1,0 +1,15 @@
+# Build-Ausgabe
+.release/
+build/
+*.zip
+
+# Externe Bibliotheken (falls später benötigt)
+Libs/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+luacov.*

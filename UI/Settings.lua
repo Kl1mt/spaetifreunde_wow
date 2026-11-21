@@ -1,0 +1,66 @@
+-- UI/Settings.lua: options in the game's Settings panel (guarded) + shared option list.
+local _, ns = ...
+
+local L = ns.L
+
+-- Shared by the Settings panel and the checkboxes in the Info tab.
+ns.SettingsList = {
+    { key = "loginGreeting", label = "OPT_LOGIN", tooltip = "OPT_LOGIN_TT" },
+    { key = "onlineGreeting", label = "OPT_ONLINE", tooltip = "OPT_ONLINE_TT" },
+    { key = "welcomeLink", label = "OPT_WELCOME", tooltip = "OPT_WELCOME_TT" },
+    { key = "greetInInstances", label = "OPT_INSTANCE", tooltip = "OPT_INSTANCE_TT" },
+    { key = "showMinimap", label = "OPT_MINIMAP", tooltip = "OPT_MINIMAP_TT" },
+}
+
+local category
+
+-- VERIFY IN-GAME: Settings API (11.x signatures) on Forever 1.60.1.
+local function register()
+    if not (Settings and Settings.RegisterVerticalLayoutCategory and Settings.RegisterAddOnSetting
+        and Settings.RegisterAddOnCategory) then
+        return
+    end
+    local createCheckbox = Settings.CreateCheckbox or Settings.CreateCheckBox
+    if not createCheckbox then
+        return
+    end
+    local ok, err = pcall(function()
+        local cat = Settings.RegisterVerticalLayoutCategory(L.ADDON_NAME)
+        local varType = (Settings.VarType and Settings.VarType.Boolean) or "boolean"
+        local store = ns.DB.data.settings
+        for _, opt in ipairs(ns.SettingsList) do
+            local setting = Settings.RegisterAddOnSetting(cat, "SpaetiFreunde_" .. opt.key, opt.key,
+                store, varType, L[opt.label], ns.DB.defaults.settings[opt.key])
+            if setting and setting.SetValueChangedCallback then
+                setting:SetValueChangedCallback(function(_, value)
+                    ns.DB:Set(opt.key, value and true or false)
+                end)
+            end
+            createCheckbox(cat, setting, L[opt.tooltip])
+        end
+        Settings.RegisterAddOnCategory(cat)
+        category = cat
+    end)
+    if not ok then
+        ns.settingsError = tostring(err)
+    end
+end
+
+ns:On("SF_DB_READY", register)
+
+function ns.HasSettingsPanel()
+    return category ~= nil
+end
+
+-- Opens our settings category, or falls back to the Info tab of the main window.
+function ns.OpenSettings()
+    if category and Settings.OpenToCategory then
+        local id = category.GetID and category:GetID() or category.ID
+        local ok = pcall(Settings.OpenToCategory, id)
+        if ok then
+            return
+        end
+    end
+    ns.Print(L.SETTINGS_UNAVAILABLE)
+    ns.UI.Toggle(ns.UI.TAB_INFO)
+end

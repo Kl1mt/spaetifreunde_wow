@@ -1,0 +1,31 @@
+## Interface: 16001, 120105
+## Title: |cffe8a33dSpätifreunde Spandau|r
+## Notes: Gildenaddon der Spätifreunde Spandau – Späti hat offen!
+## Title-deDE: |cffe8a33dSpätifreunde Spandau|r
+## Notes-deDE: Gildenaddon der Spätifreunde Spandau – Späti hat offen!
+## Author: Spätifreunde Spandau
+## Version: @project-version@
+## Category: Guild
+## Category-deDE: Gilde
+## IconTexture: Interface\Icons\INV_Drink_05
+## AddonCompartmentFunc: SpaetiFreunde_OnCompartmentClick
+## AddonCompartmentFuncOnEnter: SpaetiFreunde_OnCompartmentEnter
+## AddonCompartmentFuncOnLeave: SpaetiFreunde_OnCompartmentLeave
+## SavedVariables: SpaetiFreundeDB
+
+# Interface 16001 = WoW: Forever 1.60.1 (VERIFY IN-GAME), 120105 = Midnight retail for smoke tests.
+
+Core\Init.lua
+Locale\Locale.lua
+Locale\deDE.lua
+Core\Util.lua
+Core\Time.lua
+Core\DB.lua
+Core\Chat.lua
+Core\Roster.lua
+Modules\Sprueche.lua
+Modules\Greeting.lua
+UI\MainFrame.lua
+UI\Minimap.lua
+UI\Settings.lua
+Core\Slash.lua
