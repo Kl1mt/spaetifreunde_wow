@@ -4,7 +4,7 @@ Filled in from SpaetiProbe reports (`docs/PROBE.md`). One row per question. "Sou
 
 | # | Question | Answer | Source | Consequence for the addon |
 |---|---|---|---|---|
-| 1 | Client version, build, TOC interface number (`GetBuildInfo` 4th return) | | Build | TOC `## Interface:` line |
+| 1 | Client version, build, TOC interface number (`GetBuildInfo` 4th return) | **1.60.1, build 70959, interface 16001** ✅ | `/spaeti status` 2026-11-21 | TOC `## Interface:` line |
 | 2 | `WOW_PROJECT_ID` / `WOW_PROJECT_CAMELOT` values | | Build | Forever detection in Compat |
 | 3 | AddOns folder path (`_forever_`?) and whether "load out of date" was needed | | user note | README install steps |
 | 4 | `GetLocale()` on the guild's clients | | Build | locale handling |
@@ -13,7 +13,7 @@ Filled in from SpaetiProbe reports (`docs/PROBE.md`). One row per question. "Sou
 | 7 | Roster name format (`GetGuildRosterInfo` name: hyphen, space, realm) and number of returns | | Gilden-Roster | Roster cache |
 | 8 | `CHAT_MSG_ADDON` sender format, `Ambiguate` forms, sender → roster/GUID rule | | Addon-Nachrichten | `SenderToGUID` |
 | 9 | `guildKey`: `C_Club.GetGuildClubId()` available and stable, or guild name | | Identität | DB keying |
-| 10 | Guild rank names / indices; officer rank `Officer` present | | Gilden-Roster | Perm.IsOfficer |
+| 10 | Guild rank names / indices; officer rank `Officer` present | **`Officer` = rank index 1**; officer detection works ✅ | Gilden-Roster | Perm.IsOfficer |
 | 11 | Which slash aliases work (`/sfprobe`, `/spaetiprobe`, `/spätiprobe`, `/SPÄTIPROBE`) | | Slash-Befehle | `/spaeti`, `/späti` registration |
 | 12 | `strlower`/`strupper` on umlauts; font renders `äöüß ÄÖÜ „“` | | Text / Umlaute, screenshot | UTF-8 folding helper |
 | 13 | `ERR_FRIEND_ONLINE_SS` raw German string; guild online notices in `CHAT_MSG_SYSTEM`, or roster diff only | | Globale Strings, CHAT_MSG_SYSTEM | online greeting source |
@@ -22,9 +22,9 @@ Filled in from SpaetiProbe reports (`docs/PROBE.md`). One row per question. "Sou
 | 16 | `RegisterAddonMessagePrefix` result code | | Addon-Nachrichten | Comm init |
 | 17 | `SendAddonMessage` result codes; burst: how many of 12 succeed | | Addon-Nachrichten | throttle budget |
 | 18 | Echo loss: gaps when entering/leaving a dungeon, inside vs outside | | Echo | sync retry strategy |
-| 19 | Lockdown scope: `InChatMessagingLockdown()` in open world / dungeon / boss / combat | | Lockdown-Zeitleiste | send gate |
+| 19 | Lockdown scope: `InChatMessagingLockdown()` in open world / dungeon / boss / combat | API exists; `false` in open world ✅ (instance/boss still open) | Lockdown-Zeitleiste | send gate |
 | 20 | `ADDON_RESTRICTION_STATE_CHANGED` exists? payload? | | Lockdown-Zeitleiste | restriction listener |
-| 21 | `C_RestrictedActions` / `C_Secrets` / `issecretvalue` available; their keys | | API-Existenz, Namespaces | Safe.lua |
+| 21 | `C_RestrictedActions` / `C_Secrets` / `issecretvalue` available; their keys | secret-value guard API available ✅ (details open) | API-Existenz, Namespaces | Safe.lua |
 | 22 | Guild chat from click / slash / `C_Timer` – sent, arrived, blocked? | | Gilden-Chat-Tests | Chat.SendGuild rules |
 | 23 | Trial / veteran detection (`IsTrialAccount`, `IsVeteranTrialAccount`) and their send results | | Identität | trial notice |
 | 24 | `Settings`, `AddonCompartmentFrame`, `Menu`/`MenuUtil`, `ScrollUtil` present | | API-Existenz | UI choices |
@@ -33,3 +33,10 @@ Filled in from SpaetiProbe reports (`docs/PROBE.md`). One row per question. "Sou
 | 27 | `C_EncodingUtil` (CBOR, compression, base64) present | | API-Existenz | codec choice |
 | 28 | Server time vs local time (`GetServerTime`, `date`) | | Build | Berlin midnight reset |
 | 29 | Lua errors seen in-game / probe "Abgefangene Fehler" | | Abgefangene Fehler, screenshots | – |
+
+## Confirmed from `/spaeti status` (M1 test3, 2026-11-21)
+- Client 1.60.1 (build 70959), interface 16001; addon loads (TOC is correct).
+- Guild "Spätifreunde Spandau", 54 members; roster API works (online/total counts).
+- Rank "Officer" has rank index 1; `Offizier: ja` correct.
+- `C_ChatInfo.InChatMessagingLockdown` present, `false` in the open world.
+- Secret-value guard available; Settings API registration works.
