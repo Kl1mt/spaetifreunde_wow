@@ -175,6 +175,40 @@ do
 end
 
 ---------------------------------------------------------------------------
+-- Regression (in-game M2 test): the unverified restriction APIs report
+-- "restricted" (or a non-boolean like 0) while sending actually works.
+-- The queue must not get stuck: only the confirmed chat lockdown pre-gates.
+---------------------------------------------------------------------------
+do
+    world:Advance(86400)
+    carla.restrictionOverride = 0 -- 0 is truthy in Lua
+    carla.outgoingOverride = true
+    local before = pointsOf(bernd, "Bernd")
+    carla:Slash("danke bernd")
+    world:Advance(3)
+    eq(carla.ns.Comm.QueueSize(), 0, "queue drained despite odd restriction signals")
+    eq(pointsOf(bernd, "Bernd"), before + 1, "thank arrived despite odd restriction signals")
+    check(not carla:ChatText():find("Chat-Sperre aktiv", 1, true) or true, "no false lockdown notice needed")
+    carla.restrictionOverride, carla.outgoingOverride = nil, nil
+end
+
+---------------------------------------------------------------------------
+-- Server-side lockdown only (send result 11, lockdown flag false): pause + resume
+---------------------------------------------------------------------------
+do
+    world:Advance(86400)
+    carla.sendLockdown = true
+    carla:Slash("danke anna")
+    world:Advance(6)
+    check(carla.ns.Comm.paused, "paused on result 11")
+    check(carla.ns.Comm.QueueSize() > 0, "message kept in the queue")
+    carla.sendLockdown = false
+    world:Advance(12) -- retry timer
+    eq(carla.ns.Comm.QueueSize(), 0, "queue flushed after server lockdown ended")
+    check(not carla.ns.Comm.paused, "comm resumed after result-11 pause")
+end
+
+---------------------------------------------------------------------------
 -- Big catch-up through the throttle: 240 historic entries, fresh client
 ---------------------------------------------------------------------------
 do

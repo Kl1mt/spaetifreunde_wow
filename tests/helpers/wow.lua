@@ -282,14 +282,24 @@ local function buildEnv(world, client, member)
     env.Enum = { AddOnRestrictionType = { Combat = 0, Encounter = 1, ChallengeMode = 2, PvPMatch = 3,
         Map = 4, Chat = 5 }, SendAddonMessageResult = { Success = 0, AddonMessageThrottle = 3 } }
     env.C_RestrictedActions = {
-        IsAddOnRestrictionActive = function(kind) return kind == 5 and client.restricted or false end,
+        IsAddOnRestrictionActive = function(kind)
+            if client.restrictionOverride ~= nil then
+                return client.restrictionOverride -- e.g. a number or a stuck "true"
+            end
+            return kind == 5 and client.restricted or false
+        end,
     }
     env.C_ChatInfo = {
         RegisterAddonMessagePrefix = function() return 0 end,
         InChatMessagingLockdown = function() return client.restricted or false end,
-        AreOutgoingAddonChatMessagesRestricted = function() return client.restricted or false end,
+        AreOutgoingAddonChatMessagesRestricted = function()
+            if client.outgoingOverride ~= nil then
+                return client.outgoingOverride
+            end
+            return client.restricted or false
+        end,
         SendAddonMessage = function(prefix, msg, channel)
-            if client.restricted then
+            if client.restricted or client.sendLockdown then
                 return 11
             end
             client.bucket = math.min(10, client.bucket + (world.t - client.bucketAt))

@@ -21,7 +21,8 @@ local RESULT_LOCKDOWN = 11
 Comm.high = {} -- small control messages (new thanks, HELLO, DAYS, REQ)
 Comm.bulk = {} -- sync entry chunks
 Comm.handlers = {} -- msgType -> fn(senderGuid, fields, proto, rawText)
-Comm.stats = { sent = 0, received = 0, throttled = 0, dropped = 0 }
+Comm.stats = { sent = 0, received = 0, throttled = 0, dropped = 0, lockdown = 0, errors = 0 }
+Comm.lastResult = "-" -- last raw SendAddonMessage result (diagnostics)
 Comm.paused = false
 Comm.bulkQueued = 0 -- bulk messages ever queued (tickets)
 Comm.bulkDone = 0 -- bulk messages sent or dropped
@@ -34,27 +35,44 @@ local function now()
     return GetTime and GetTime() or 0
 end
 
--- Is sending addon messages restricted right now? Every check is guarded:
--- a missing API counts as "not restricted".
--- VERIFY IN-GAME: lockdown inside dungeons/boss fights is still unconfirmed.
+-- Calls fn safely and turns the result into a readable flag:
+-- true / false, "nil" (API missing / no value), "secret", "err", or the raw value
+-- as text when it is not a boolean (e.g. a number - 0 would be truthy in Lua!).
+local function probeFlag(fn, ...)
+    if type(fn) ~= "function" then
+        return "nil"
+    end
+    local ok, v = pcall(fn, ...)
+    if not ok then
+        return "err"
+    end
+    if Util.IsSecret and Util.IsSecret(v) then
+        return "secret"
+    end
+    if type(v) == "boolean" then
+        return v
+    end
+    return v == nil and "nil" or tostring(v)
+end
+
+-- The three restriction signals, for diagnostics (/spaeti status).
+function Comm.GateInfo()
+    local chatLock = C_ChatInfo and probeFlag(C_ChatInfo.InChatMessagingLockdown) or "nil"
+    local outgoing = C_ChatInfo and probeFlag(C_ChatInfo.AreOutgoingAddonChatMessagesRestricted) or "nil"
+    local chatType = Enum and Enum.AddOnRestrictionType and Enum.AddOnRestrictionType.Chat
+    local restriction = (C_RestrictedActions and chatType ~= nil)
+        and probeFlag(C_RestrictedActions.IsAddOnRestrictionActive, chatType) or "nil"
+    return chatLock, outgoing, restriction
+end
+
+-- Is sending addon messages restricted right now?
+-- Only the confirmed chat lockdown flag pre-gates, and only an explicit boolean true
+-- counts. The other signals (unverified on Forever) are shown in /spaeti status only;
+-- if sending is really blocked, the server answers 11 = AddOnMessageLockdown and
+-- the queue pauses then (see pump).
 function Comm.IsRestricted()
-    if ns.Chat.IsLockedDown() then
-        return true
-    end
-    if C_ChatInfo and type(C_ChatInfo.AreOutgoingAddonChatMessagesRestricted) == "function" then
-        local ok, restricted = pcall(C_ChatInfo.AreOutgoingAddonChatMessagesRestricted)
-        if ok and restricted then
-            return true
-        end
-    end
-    if C_RestrictedActions and type(C_RestrictedActions.IsAddOnRestrictionActive) == "function"
-        and Enum and Enum.AddOnRestrictionType and Enum.AddOnRestrictionType.Chat then
-        local ok, active = pcall(C_RestrictedActions.IsAddOnRestrictionActive, Enum.AddOnRestrictionType.Chat)
-        if ok and active then
-            return true
-        end
-    end
-    return false
+    local chatLock = C_ChatInfo and probeFlag(C_ChatInfo.InChatMessagingLockdown)
+    return chatLock == true
 end
 
 function Comm.QueueSize()
@@ -74,6 +92,7 @@ local function rawSend(msg)
         return "drop"
     end
     local ok, result = pcall(C_ChatInfo.SendAddonMessage, Comm.PREFIX, msg, "GUILD")
+    Comm.lastResult = ok and tostring(result) or "err"
     if not ok then
         return "drop"
     end
@@ -90,8 +109,7 @@ end
 
 local schedulePump
 
-local function pump()
-    pumpScheduled = false
+local function pumpBody()
     if Comm.QueueSize() == 0 then
         return
     end
@@ -129,6 +147,7 @@ local function pump()
             tokens = 0
             break
         elseif result == "lockdown" then
+            Comm.stats.lockdown = Comm.stats.lockdown + 1
             Comm.paused = true
             ns:Fire("SF_COMM_STATE")
             schedulePump(Comm.PAUSE_RETRY)
@@ -144,6 +163,23 @@ local function pump()
     if Comm.QueueSize() > 0 then
         local wait = math.max(Comm.PUMP_INTERVAL, (1 - tokens) / Comm.RATE)
         schedulePump(wait)
+    end
+end
+
+-- Never let an error leave the queue stuck: report it and try again later.
+local function pump()
+    pumpScheduled = false
+    local ok, err = pcall(pumpBody)
+    if not ok then
+        Comm.stats.errors = Comm.stats.errors + 1
+        Comm.lastError = tostring(err)
+        local handler = geterrorhandler and geterrorhandler()
+        if handler then
+            pcall(handler, err)
+        end
+        if Comm.QueueSize() > 0 then
+            schedulePump(Comm.PAUSE_RETRY)
+        end
     end
 end
 

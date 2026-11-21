@@ -248,4 +248,6 @@ L.SYNC_LAST = "zuletzt %s"
 L.SYNC_NEWER_VERSION = "Jemand in der Gilde nutzt eine neuere Addon-Version. Bitte Spätifreunde aktualisieren!"
 
 -- /spaeti status
+L.STATUS_SYNC_DIAG = "Sync-Details: Pause %s · Sperren %s/%s/%s · letztes Ergebnis %s · verworfen %d · Sperr-Antworten %d · Fehler %d · Prefix %s"
+L.STATUS_SYNC_ERROR = "Sync-Fehler: %s"
 L.STATUS_SYNC = "Spätipunkte: %d Einträge, Warteschlange %d, gesendet %d, empfangen %d, Drossel %d"

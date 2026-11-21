@@ -42,6 +42,13 @@ local function printStatus()
     local stats = ns.Comm.stats
     ns.Print(L.STATUS_SYNC:format(store and store.count or 0, ns.Comm.QueueSize(), stats.sent,
         stats.received, stats.throttled))
+    local c1, c2, c3 = ns.Comm.GateInfo()
+    ns.Print(L.STATUS_SYNC_DIAG:format(yesNo(ns.Comm.paused), tostring(c1), tostring(c2), tostring(c3),
+        tostring(ns.Comm.lastResult), stats.dropped, stats.lockdown, stats.errors,
+        tostring(ns.Comm.prefixResult)))
+    if ns.Comm.lastError then
+        ns.Print(L.STATUS_SYNC_ERROR:format(ns.Comm.lastError))
+    end
     local missing = ns.MissingLocaleKeys()
     if #missing > 0 then
         ns.Print(L.STATUS_MISSING_KEYS:format(table.concat(missing, ", ")))

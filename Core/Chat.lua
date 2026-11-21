@@ -12,8 +12,8 @@ ns.Chat = Chat
 function Chat.IsLockedDown()
     if C_ChatInfo and type(C_ChatInfo.InChatMessagingLockdown) == "function" then
         local ok, locked = pcall(C_ChatInfo.InChatMessagingLockdown)
-        if ok then
-            return locked and true or false
+        if ok and not (ns.Util.IsSecret and ns.Util.IsSecret(locked)) then
+            return locked == true
         end
     end
     return nil
