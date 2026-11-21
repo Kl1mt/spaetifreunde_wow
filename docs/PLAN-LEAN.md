@@ -18,6 +18,7 @@ This is the plan we work from. `docs/PLAN.md` is the detailed background: resear
 | Distribution | GitHub releases only, as a zip attached to a release |
 | Licence | Guild-only, all rights reserved |
 | Language | All user-facing text is German, in `Locale/deDE.lua` |
+| Chat posting | The addon **never posts to guild/say/yell chat**, not even on click. Everything is shown locally; members see each other's data only via hidden addon-message sync. Later features (Termine, Würfelspiele, Quiz, Pfand winners) must follow this too |
 
 ## Ground rules for every session
 - The game client is not available in the container. Each subtask ends with a **German in-game test checklist** in `docs/TESTING_INGAME.md`, which the user works through.
