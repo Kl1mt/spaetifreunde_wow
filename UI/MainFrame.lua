@@ -5,7 +5,7 @@ local L = ns.L
 local UI = {}
 ns.UI = UI
 
-local WIDTH, HEIGHT = 440, 330
+local WIDTH, HEIGHT = 520, 430
 local frame
 local tabs, panels = {}, {}
 local refreshers = {}
@@ -44,6 +44,13 @@ local function newButton(parent, text, width, onClick)
     return b
 end
 UI.NewButton = newButton
+UI.NewText = newText
+UI.WIDTH = WIDTH
+
+-- Other files (UI/PointsTab.lua) add refresh callbacks for their tab contents.
+function UI.AddRefresher(fn)
+    refreshers[#refreshers + 1] = fn
+end
 
 -- Checkbox bound to a DB setting.
 local function newCheckbox(parent, key, label, tooltip)
@@ -203,7 +210,7 @@ local function create()
 
     local defs = {
         { L.TAB_START, buildStart },
-        { L.TAB_POINTS, function(p) buildPlaceholder(p, L.POINTS_TEXT) end },
+        { L.TAB_POINTS, function(p) UI.BuildPoints(p) end },
         { L.TAB_ONLINE, function(p) buildPlaceholder(p, L.ONLINE_TEXT) end },
         { L.TAB_INFO, buildInfo },
     }
@@ -239,7 +246,11 @@ function UI.Toggle(tabIndex)
     end
 end
 
+UI.TAB_POINTS = 2
 UI.TAB_INFO = 4
 
 ns:On("SF_ROSTER_UPDATED", UI.Refresh)
 ns:On("SF_SETTING_CHANGED", UI.Refresh)
+ns:On("SF_POINTS_UPDATED", UI.Refresh)
+ns:On("SF_SYNC_STATE", UI.Refresh)
+ns:On("SF_COMM_STATE", UI.Refresh)
