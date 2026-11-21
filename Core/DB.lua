@@ -8,7 +8,6 @@ DB.defaults = {
     settings = {
         loginGreeting = true,
         onlineGreeting = true,
-        welcomeLink = true,
         greetInInstances = false,
         showMinimap = true,
     },

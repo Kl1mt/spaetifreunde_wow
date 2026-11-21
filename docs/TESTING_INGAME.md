@@ -26,10 +26,8 @@ und Ergebnisse (✅ / ❌ + Notiz, Screenshot oder Fehlertext) zurückmelden.
 | # | Test | Erwartet | Ergebnis |
 |---|---|---|---|
 | G1 | Einloggen, ca. 6 Sekunden warten | Genau **eine** Zeile „Späti hat offen! …“ plus Anzahl der Leute im Laden. Kein Spam. | |
-| G2 | Gildenmitglied loggt ein (Mitspieler) | Innerhalb von ca. 1 Minute erscheint lokal z. B. „Kalle kommt rein. Moin!“ mit **[Willkommen sagen]**. Andere sehen davon nichts. | |
-| G3 | Auf **[Willkommen sagen]** klicken | Ein Gruß erscheint im **Gildenchat**. Kein „Aktion blockiert“-Fenster. | |
-| G4 | Nicht klicken | Es wird **nichts** automatisch in die Gilde gepostet. | |
-| G5 | `/spaeti willkommen` | Begrüßt das zuletzt eingeloggte Mitglied im Gildenchat. | |
+| G2 | Gildenmitglied loggt ein (Mitspieler) | Innerhalb von ca. 1 Minute erscheint lokal z. B. „Kalle kommt rein. Moin!“. Andere sehen davon nichts. | |
+| G3 | Allgemein | Das Addon postet **nie** etwas in den Gildenchat. | |
 | G6 | In einem Dungeon jemand loggt ein | Keine Online-Meldung (Standard: in Instanzen stumm). | |
 | G7 | Name mit Nachname (Forever) | Name wird vollständig und korrekt angezeigt (z. B. „Vorname Nachname“). Bitte genaue Schreibweise notieren. | |
 
@@ -63,7 +61,7 @@ und Ergebnisse (✅ / ❌ + Notiz, Screenshot oder Fehlertext) zurückmelden.
 ### Einstellungen
 | # | Test | Erwartet | Ergebnis |
 |---|---|---|---|
-| O1 | Esc → Optionen → AddOns → Spätifreunde Spandau (oder `/spaeti optionen`) | Fünf Häkchen: Begrüßung, Online-Meldungen, Willkommen-Link, Instanzen, Minimap-Knopf. | |
+| O1 | Esc → Optionen → AddOns → Spätifreunde Spandau (oder `/spaeti optionen`) | Vier Häkchen: Begrüßung, Online-Meldungen, Instanzen, Minimap-Knopf. | |
 | O2 | Häkchen ändern, ausloggen, einloggen | Einstellungen bleiben erhalten. | |
 | O3 | „Begrüßung beim Einloggen“ aus, `/reload` | Keine Begrüßungszeile mehr. | |
 | O4 | „Minimap-Knopf anzeigen“ aus | Knopf verschwindet sofort. | |

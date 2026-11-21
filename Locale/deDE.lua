@@ -44,16 +44,6 @@ L.ONLINE_LINES = {
     "%s schlendert rin. Eene Mate, wie immer?",
 }
 L.ONLINE_MANY = "%s und %d weitere sind reingekommen."
-L.WELCOME_LINK = "[Willkommen sagen]"
--- Wird nach Klick in den Gildenchat gepostet (%s = Name)
-L.WELCOME_POSTS = {
-    "Willkommen im Späti, %s!",
-    "Moin %s, schön dass de da bist!",
-    "Na %s, allet fit? Willkommen!",
-    "Tach %s! Komm rin, Kühlschrank is voll.",
-}
-L.WELCOME_NONE = "Grad keener zum Begrüßen da."
-L.WELCOME_GONE = "%s ist nicht mehr online."
 
 ---------------------------------------------------------------------------
 -- Sprüche (/spruch). Kurze, gängige Berliner Sprüche und Berlinerisch.
@@ -105,23 +95,12 @@ L.SPRUECHE = {
 L.SPRUCH_LOCAL = "„%s“"
 
 ---------------------------------------------------------------------------
--- Gildenchat-Helfer
----------------------------------------------------------------------------
-L.CHAT_NOT_IN_GUILD = "Du bist in keiner Gilde – nix gesendet."
-L.CHAT_LOCKDOWN = "Der Chat ist grad gesperrt (z. B. Instanz oder Bosskampf) – nix gesendet."
-L.CHAT_NOT_USER_ACTION = "Senden geht nur direkt per Klick oder Befehl."
-L.CHAT_EMPTY = "Leere Nachricht – nix gesendet."
-L.CHAT_UNAVAILABLE = "Chat-Senden ist in diesem Client nicht verfügbar."
-L.CHAT_FAILED = "Senden hat nicht geklappt."
-
----------------------------------------------------------------------------
 -- Slash-Befehle
 ---------------------------------------------------------------------------
 L.HELP_HEADER = "Befehle:"
 L.HELP_LINES = {
     "/spaeti oder /späti – Fenster öffnen/schließen",
     "/spaeti spruch – Spruch anzeigen (auch: /spruch)",
-    "/spaeti willkommen – Zuletzt eingeloggtes Mitglied begrüßen",
     "/spaeti status – Version, Gilde, Offizier, Chat-Sperre",
     "/spaeti optionen – Einstellungen öffnen",
     "/spaeti hilfe – diese Hilfe",
@@ -186,8 +165,6 @@ L.OPT_LOGIN = "Begrüßung beim Einloggen"
 L.OPT_LOGIN_TT = "Zeigt beim Einloggen einen Späti-Spruch in deinem Chatfenster."
 L.OPT_ONLINE = "Online-Meldungen"
 L.OPT_ONLINE_TT = "Zeigt lokal an, wenn ein Gildenmitglied online kommt."
-L.OPT_WELCOME = "„Willkommen sagen“-Link anzeigen"
-L.OPT_WELCOME_TT = "Hängt an Online-Meldungen einen Link an. Erst dein Klick postet einen Gruß in den Gildenchat."
 L.OPT_INSTANCE = "Meldungen auch in Instanzen"
 L.OPT_INSTANCE_TT = "Online-Meldungen auch in Dungeons und Schlachtzügen anzeigen."
 L.OPT_MINIMAP = "Minimap-Knopf anzeigen"

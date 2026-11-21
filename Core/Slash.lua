@@ -56,9 +56,6 @@ local commands = {
     ["?"] = printHelp,
     optionen = function() ns.OpenSettings() end,
     einstellungen = function() ns.OpenSettings() end,
-    willkommen = function()
-        ns.Chat.RunUserAction(ns.Greeting.WelcomeLast)
-    end,
 }
 
 local function handler(msg)

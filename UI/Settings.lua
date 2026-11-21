@@ -7,7 +7,6 @@ local L = ns.L
 ns.SettingsList = {
     { key = "loginGreeting", label = "OPT_LOGIN", tooltip = "OPT_LOGIN_TT" },
     { key = "onlineGreeting", label = "OPT_ONLINE", tooltip = "OPT_ONLINE_TT" },
-    { key = "welcomeLink", label = "OPT_WELCOME", tooltip = "OPT_WELCOME_TT" },
     { key = "greetInInstances", label = "OPT_INSTANCE", tooltip = "OPT_INSTANCE_TT" },
     { key = "showMinimap", label = "OPT_MINIMAP", tooltip = "OPT_MINIMAP_TT" },
 }
