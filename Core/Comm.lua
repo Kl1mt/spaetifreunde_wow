@@ -30,6 +30,7 @@ Comm.bulkDone = 0 -- bulk messages sent or dropped
 local tokens = Comm.BURST
 local lastRefill
 local pumpScheduled = false
+local pumpGen = 0 -- bumped by every pump; a timer from an older generation is stale
 
 local function now()
     return GetTime and GetTime() or 0
@@ -109,26 +110,29 @@ end
 
 local schedulePump
 
+local function setPaused(v)
+    if Comm.paused ~= v then
+        Comm.paused = v
+        ns:Fire("SF_COMM_STATE")
+    end
+end
+
+-- Paused stays on until a send succeeds again (or there is nothing left to send).
 local function pumpBody()
     if Comm.QueueSize() == 0 then
+        setPaused(false)
         return
     end
     if not (IsInGuild and IsInGuild()) then
         Comm.bulkDone = Comm.bulkQueued
         Comm.high, Comm.bulk = {}, {}
+        setPaused(false)
         return
     end
     if Comm.IsRestricted() then
-        if not Comm.paused then
-            Comm.paused = true
-            ns:Fire("SF_COMM_STATE")
-        end
+        setPaused(true)
         schedulePump(Comm.PAUSE_RETRY)
         return
-    end
-    if Comm.paused then
-        Comm.paused = false
-        ns:Fire("SF_COMM_STATE")
     end
     refill()
     while tokens >= 1 and Comm.QueueSize() > 0 do
@@ -136,6 +140,7 @@ local function pumpBody()
         local result = rawSend(queue[1])
         local isBulk = queue == Comm.bulk
         if result == "ok" then
+            setPaused(false)
             table.remove(queue, 1)
             if isBulk then
                 Comm.bulkDone = Comm.bulkDone + 1
@@ -148,8 +153,7 @@ local function pumpBody()
             break
         elseif result == "lockdown" then
             Comm.stats.lockdown = Comm.stats.lockdown + 1
-            Comm.paused = true
-            ns:Fire("SF_COMM_STATE")
+            setPaused(true)
             schedulePump(Comm.PAUSE_RETRY)
             return
         else
@@ -160,7 +164,9 @@ local function pumpBody()
             end
         end
     end
-    if Comm.QueueSize() > 0 then
+    if Comm.QueueSize() == 0 then
+        setPaused(false)
+    else
         local wait = math.max(Comm.PUMP_INTERVAL, (1 - tokens) / Comm.RATE)
         schedulePump(wait)
     end
@@ -168,6 +174,7 @@ end
 
 -- Never let an error leave the queue stuck: report it and try again later.
 local function pump()
+    pumpGen = pumpGen + 1
     pumpScheduled = false
     local ok, err = pcall(pumpBody)
     if not ok then
@@ -189,7 +196,12 @@ function schedulePump(delay)
     end
     pumpScheduled = true
     if C_Timer and C_Timer.After then
-        C_Timer.After(delay or 0, pump)
+        local gen = pumpGen
+        C_Timer.After(delay or 0, function()
+            if gen == pumpGen then -- else a direct pump (Kick) ran meanwhile
+                pump()
+            end
+        end)
     else
         pump()
     end
@@ -265,8 +277,8 @@ ns:RegisterEvent("CHAT_MSG_ADDON", function(_, ...)
 end)
 
 -- VERIFY IN-GAME: payload of ADDON_RESTRICTION_STATE_CHANGED; we only use it as a wake-up.
--- Pump right away (don't wait for the pending retry timer); a stale timer firing
--- later just runs one extra, harmless pump.
+-- Pump right away (don't wait for the pending retry timer). The pending timer is
+-- then stale and does nothing, so repeated events never add timer chains.
 function Comm.Kick()
     if Comm.QueueSize() > 0 then
         pump()

@@ -70,9 +70,11 @@ end
 local World = {}
 World.__index = World
 
-function M.NewWorld(seed)
+-- opts.start: server time at t = 0 (default M.START)
+function M.NewWorld(seed, opts)
     math.randomseed(seed or 1)
     return setmetatable({
+        start = opts and opts.start or M.START,
         t = 0, -- GetTime()
         members = {}, -- array of { name, guid, rankName, rankIndex, client }
         timers = {},
@@ -86,7 +88,7 @@ function M.NewWorld(seed)
 end
 
 function World:ServerTime()
-    return M.START + math.floor(self.t)
+    return self.start + math.floor(self.t)
 end
 
 function World:AddMember(name, guid, rankName, rankIndex)
@@ -150,10 +152,11 @@ function World:Broadcast(sender, prefix, msg)
 end
 
 -- Count logged messages of a type ("N", "H", "D", "R", "E") since index `from`.
-function World:Count(msgType, from)
+-- Optional `by`: only messages sent by that member name.
+function World:Count(msgType, from, by)
     local n = 0
     for i = from or 1, #self.log do
-        if self.log[i].msg:match("^%d+~(%u)") == msgType then
+        if self.log[i].msg:match("^%d+~(%u)") == msgType and (not by or self.log[i].from == by) then
             n = n + 1
         end
     end
@@ -299,6 +302,7 @@ local function buildEnv(world, client, member)
             return client.restricted or false
         end,
         SendAddonMessage = function(prefix, msg, channel)
+            client.sendAttempts = client.sendAttempts + 1
             if client.restricted or client.sendLockdown then
                 return 11
             end
@@ -325,7 +329,7 @@ end
 function World:Login(name, savedVars, opts)
     local member = assert(self:Member(name), "unknown member " .. name)
     local client = setmetatable({ world = self, member = member, name = name, frames = {}, sounds = {},
-        alive = true, throttled = 0, sentCount = 0 }, Client)
+        alive = true, throttled = 0, sentCount = 0, sendAttempts = 0 }, Client)
     if opts and opts.restricted then
         client.restricted = true
     end

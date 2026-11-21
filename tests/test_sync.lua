@@ -209,6 +209,33 @@ do
 end
 
 ---------------------------------------------------------------------------
+-- Regression: every ADDON_RESTRICTION_STATE_CHANGED (fires for each restriction
+-- type) used to start one more permanent retry timer chain. And during a result-11
+-- pause the queue must stay paused until a send succeeds (no paused/resumed flicker).
+---------------------------------------------------------------------------
+do
+    world:Advance(86400)
+    carla.sendLockdown = true
+    carla:Slash("danke bernd")
+    world:Advance(1)
+    check(carla.ns.Comm.paused, "paused on result 11 (kick test)")
+    for kind = 0, 9 do
+        carla:Fire("ADDON_RESTRICTION_STATE_CHANGED", kind % 6, 1)
+    end
+    local flips = 0
+    carla.ns:On("SF_COMM_STATE", function() flips = flips + 1 end)
+    local attempts = carla.sendAttempts
+    world:Advance(30)
+    local tries = carla.sendAttempts - attempts
+    check(tries <= 7, ("one retry chain after many kicks (%d attempts in 30 s)"):format(tries))
+    eq(flips, 0, "no paused/resumed flicker while result 11 persists")
+    carla.sendLockdown = false
+    world:Advance(6)
+    eq(carla.ns.Comm.QueueSize(), 0, "queue flushed after kicks + lockdown end")
+    check(not carla.ns.Comm.paused, "resumed after the first successful send")
+end
+
+---------------------------------------------------------------------------
 -- Big catch-up through the throttle: 240 historic entries, fresh client
 ---------------------------------------------------------------------------
 do
