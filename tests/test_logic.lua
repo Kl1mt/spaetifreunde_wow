@@ -288,6 +288,22 @@ check(st == "ambiguous" and #cands == 2 and cands[1].name == "Kalle Kiez", "ambi
 local st2 = match("lav")
 eq(st2, "ambiguous", "lav is ambiguous")
 eq(match("Zorro"), "none", "no match")
+-- Exact whole word (first or surname) beats a prefix of another name.
+local F, G, H = "Player-6949-0000001F", "Player-6949-0000002F", "Player-6949-0000003F"
+members[#members + 1] = { guid = F, name = "Lorenzo Rossi" }
+members[#members + 1] = { guid = G, name = "Jörg Öztürk" }
+members[#members + 1] = { guid = H, name = "Jörgen Kiez" }
+eq(match("Lorenz"), A, "exact surname beats prefix of another first name")
+eq(match("LORENZO"), F, "exact first name, case-insensitive")
+eq(match("lore"), "ambiguous", "prefix of first name and of surname: ambiguous across both")
+eq(match("öztürk"), G, "exact umlaut surname, lower case")
+eq(match("ÖZTÜRK"), G, "exact umlaut surname, upper case")
+eq(match("jörg"), G, "exact umlaut first name beats prefix Jörgen")
+eq(match("JÖRGE"), H, "unique umlaut prefix")
+local st3, c3 = match("kiez")
+check(st3 == "ambiguous" and #c3 == 2, "same exact surname twice: ambiguous")
+eq(match("lava lor"), A, "prefix of the full name")
+eq(match("rossi"), F, "exact surname")
 eq(match(""), "none", "empty query")
 
 check(#world.errors == 0, "no Lua errors: " .. table.concat(world.errors, " | "))

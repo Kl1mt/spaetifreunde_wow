@@ -321,33 +321,35 @@ local function startsWith(s, prefix)
     return s:sub(1, #prefix) == prefix
 end
 
+-- Tiers: exact full name -> exact whole word (first name or surname) -> prefix of
+-- the full name or of any word. Within a tier more than one hit is ambiguous.
 function PD.MatchName(query, members)
     local q = norm(query)
     if q == "" then
         return "none"
     end
-    local exact, first, prefix, word = {}, {}, {}, {}
+    local exact, word, prefix = {}, {}, {}
     for _, m in ipairs(members) do
         local n = norm(m.name)
         if n == q then
             exact[#exact + 1] = m
         else
-            local firstName = n:match("^(%S+)") or n
-            if firstName == q then
-                first[#first + 1] = m
-            elseif startsWith(n, q) then
-                prefix[#prefix + 1] = m
-            else
-                for w in n:gmatch("%S+") do
-                    if startsWith(w, q) then
-                        word[#word + 1] = m
-                        break
-                    end
+            local isWord, isPrefix = false, startsWith(n, q)
+            for w in n:gmatch("%S+") do
+                if w == q then
+                    isWord = true
+                elseif startsWith(w, q) then
+                    isPrefix = true
                 end
+            end
+            if isWord then
+                word[#word + 1] = m
+            elseif isPrefix then
+                prefix[#prefix + 1] = m
             end
         end
     end
-    for _, group in ipairs({ exact, first, prefix, word }) do
+    for _, group in ipairs({ exact, word, prefix }) do
         if #group == 1 then
             return "ok", group[1]
         elseif #group > 1 then
