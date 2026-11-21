@@ -12,6 +12,8 @@ local Points = {}
 ns.Points = Points
 
 local RECOMPUTE_DELAY = 0.5
+local BATCH_QUIET = 10 -- no new sync entries for this long -> the catch-up batch is over
+local BATCH_RECOMPUTE = 5 -- recompute pace while a catch-up batch is running
 local NOTICE_SINGLE_MAX = 2 -- more new thanks at once are summarised
 local MAX_CANDIDATES = 8
 
@@ -21,9 +23,14 @@ Points.guild = nil -- saved per-guild table
 
 local pendingNotices = {} -- ids of newly received thanks for me
 local recomputeScheduled = false
+local batchUntil -- GetTime() at which the running catch-up batch counts as over (nil = none)
 
 local function serverNow()
     return GetServerTime and GetServerTime() or 0
+end
+
+local function clock()
+    return GetTime and GetTime() or 0
 end
 
 local function esc(s)
@@ -110,15 +117,18 @@ local function showNotices(derived, myGuid)
         end
     end
     pendingNotices = {}
-    if #list == 0 or not ns.DB:Get("thanksNotice") then
+    if #list == 0 then
         return
     end
-    if #list > NOTICE_SINGLE_MAX then
-        ns.Print(L.POINTS_NOTICE_MANY:format(#list))
-    else
-        for _, e in ipairs(list) do
-            local fmt = Util.RandomPick(L.POINTS_NOTICE_LINES) or "%s"
-            ns.Print(fmt:format(esc(Points.NameOf(e.a))))
+    -- Text and sound are separate settings (playSound checks its own).
+    if ns.DB:Get("thanksNotice") then
+        if #list > NOTICE_SINGLE_MAX then
+            ns.Print(L.POINTS_NOTICE_MANY:format(#list))
+        else
+            for _, e in ipairs(list) do
+                local fmt = Util.RandomPick(L.POINTS_NOTICE_LINES) or "%s"
+                ns.Print(fmt:format(esc(Points.NameOf(e.a))))
+            end
         end
     end
     playSound("thanks")
@@ -129,14 +139,22 @@ local function checkRankUp(derived, myGuid, silent)
     local mine = derived.points[myGuid] or 0
     local idx = PD.RankFor(mine)
     local before = g.lastRank[myGuid]
+    if before == nil then
+        -- First standing on this PC: remember it silently, but not from the still
+        -- empty store of a fresh install (the history arrives by sync).
+        if not silent and Points.store.count > 0 then
+            g.lastRank[myGuid] = idx
+        end
+        return
+    end
     g.lastRank[myGuid] = idx
-    if silent or not before or idx <= before then
+    if silent or idx <= before then
         return
     end
     if ns.DB:Get("thanksNotice") then
         ns.Print(L.POINTS_RANK_UP:format(Points.RankName(idx)))
-        playSound("rank")
     end
+    playSound("rank")
 end
 
 function Points:Recompute(silent)
@@ -150,26 +168,57 @@ function Points:Recompute(silent)
     })
     self.derived = derived
     local myGuid = ns.Roster:MyGUID()
-    if myGuid then
+    -- During a catch-up batch notices and rank-ups wait for its end (one summary).
+    if myGuid and not batchUntil then
         showNotices(derived, myGuid)
         checkRankUp(derived, myGuid, silent)
     end
     ns:Fire("SF_POINTS_UPDATED")
 end
 
-local function scheduleRecompute()
-    if recomputeScheduled then
+-- A sooner request replaces a later one; the later timer then finds nothing to do.
+local recomputeAt
+local function scheduleRecompute(delay)
+    delay = delay or RECOMPUTE_DELAY
+    local at = clock() + delay
+    if recomputeScheduled and recomputeAt <= at then
         return
     end
-    recomputeScheduled = true
+    recomputeScheduled, recomputeAt = true, at
     if C_Timer and C_Timer.After then
-        C_Timer.After(RECOMPUTE_DELAY, function()
-            if recomputeScheduled then
+        C_Timer.After(delay, function()
+            if recomputeScheduled and clock() >= recomputeAt - 0.01 then
                 Points:Recompute()
             end
         end)
     else
         Points:Recompute()
+    end
+end
+
+-- Catch-up batch: a history arriving in many sync chunks (fresh install, new PC,
+-- long absence) is announced once, after no new sync entry came for BATCH_QUIET.
+local function batchCheck()
+    if not batchUntil then
+        return
+    end
+    local left = batchUntil - clock()
+    if left > 0.1 then
+        C_Timer.After(left, batchCheck)
+        return
+    end
+    batchUntil = nil
+    Points:Recompute()
+end
+
+local function extendBatch()
+    if not (C_Timer and C_Timer.After) then
+        return
+    end
+    local running = batchUntil ~= nil
+    batchUntil = clock() + BATCH_QUIET
+    if not running then
+        C_Timer.After(BATCH_QUIET, batchCheck)
     end
 end
 
@@ -180,10 +229,14 @@ function Points:Ingest(id, e, source)
     end
     local added = self.store:Add(id, e, serverNow())
     if added then
+        if source == "sync" then
+            extendBatch()
+        end
         if source ~= "local" and e.k == "T" and e.b == ns.Roster:MyGUID() then
             pendingNotices[#pendingNotices + 1] = id
         end
-        scheduleRecompute()
+        -- A long catch-up recomputes at a slower pace; direct entries stay quick.
+        scheduleRecompute((source == "sync" and batchUntil) and BATCH_RECOMPUTE or nil)
     end
     return added
 end
