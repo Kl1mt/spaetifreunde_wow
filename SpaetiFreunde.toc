@@ -23,9 +23,15 @@ Core\Time.lua
 Core\DB.lua
 Core\Chat.lua
 Core\Roster.lua
+Core\Codec.lua
+Core\Comm.lua
 Modules\Sprueche.lua
 Modules\Greeting.lua
+Modules\PointsData.lua
+Modules\Points.lua
+Modules\Sync.lua
 UI\MainFrame.lua
+UI\PointsTab.lua
 UI\Minimap.lua
 UI\Settings.lua
 Core\Slash.lua

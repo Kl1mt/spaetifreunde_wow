@@ -9,6 +9,8 @@ ns.SettingsList = {
     { key = "onlineGreeting", label = "OPT_ONLINE", tooltip = "OPT_ONLINE_TT" },
     { key = "greetInInstances", label = "OPT_INSTANCE", tooltip = "OPT_INSTANCE_TT" },
     { key = "showMinimap", label = "OPT_MINIMAP", tooltip = "OPT_MINIMAP_TT" },
+    { key = "thanksNotice", label = "OPT_THANKS", tooltip = "OPT_THANKS_TT" },
+    { key = "thanksSound", label = "OPT_THANKS_SOUND", tooltip = "OPT_THANKS_SOUND_TT" },
 }
 
 local category

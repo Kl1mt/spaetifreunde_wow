@@ -38,6 +38,10 @@ local function printStatus()
     if ns.DB.readOnly then
         ns.Print(L.STATUS_READONLY)
     end
+    local store = ns.Points.store
+    local stats = ns.Comm.stats
+    ns.Print(L.STATUS_SYNC:format(store and store.count or 0, ns.Comm.QueueSize(), stats.sent,
+        stats.received, stats.throttled))
     local missing = ns.MissingLocaleKeys()
     if #missing > 0 then
         ns.Print(L.STATUS_MISSING_KEYS:format(table.concat(missing, ", ")))
@@ -54,6 +58,8 @@ local commands = {
     hilfe = printHelp,
     help = printHelp,
     ["?"] = printHelp,
+    danke = function(rest) ns.Points:Thank(rest) end,
+    punkte = function() ns.UI.Toggle(ns.UI.TAB_POINTS) end,
     optionen = function() ns.OpenSettings() end,
     einstellungen = function() ns.OpenSettings() end,
 }
