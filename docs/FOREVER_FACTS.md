@@ -14,7 +14,7 @@ Filled in from SpaetiProbe reports (`docs/PROBE.md`). One row per question. "Sou
 | 8 | `CHAT_MSG_ADDON` sender format, `Ambiguate` forms, sender → roster/GUID rule | | Addon-Nachrichten | `SenderToGUID` |
 | 9 | `guildKey`: `C_Club.GetGuildClubId()` available and stable, or guild name | | Identität | DB keying |
 | 10 | Guild rank names / indices; officer rank `Officer` present | **`Officer` = rank index 1**; officer detection works ✅ | Gilden-Roster | Perm.IsOfficer |
-| 11 | Which slash aliases work (`/sfprobe`, `/spaetiprobe`, `/spätiprobe`, `/SPÄTIPROBE`) | | Slash-Befehle | `/spaeti`, `/späti` registration |
+| 11 | Which slash aliases work (`/sfprobe`, `/spaetiprobe`, `/spätiprobe`, `/SPÄTIPROBE`) | `/späti` (lowercase ä) works ✅; uppercase still open | Slash-Befehle | `/spaeti`, `/späti` registration |
 | 12 | `strlower`/`strupper` on umlauts; font renders `äöüß ÄÖÜ „“` | | Text / Umlaute, screenshot | UTF-8 folding helper |
 | 13 | `ERR_FRIEND_ONLINE_SS` raw German string; guild online notices in `CHAT_MSG_SYSTEM`, or roster diff only | | Globale Strings, CHAT_MSG_SYSTEM | online greeting source |
 | 14 | `RANDOM_ROLL_RESULT` raw German string and parsed pattern | | Globale Strings | dice games |
@@ -40,3 +40,8 @@ Filled in from SpaetiProbe reports (`docs/PROBE.md`). One row per question. "Sou
 - Rank "Officer" has rank index 1; `Offizier: ja` correct.
 - `C_ChatInfo.InChatMessagingLockdown` present, `false` in the open world.
 - Secret-value guard available; Settings API registration works.
+
+## Confirmed by the user in-game (M1 test3, 2026-11-21)
+- `/späti` with umlaut works like `/spaeti`.
+- Login greeting shows once, with the online count ("3 Stammkunden sind grad im Laden."); umlauts and „“ render correctly in chat.
+- Minimap button: movable and clickable. Settings panel works.
