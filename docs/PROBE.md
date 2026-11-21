@@ -6,7 +6,7 @@ Du brauchst dafür etwa **30–45 Minuten** und **ein zweites Gildenmitglied**, 
 
 ## 1. Installieren
 
-1. Den Ordner `tools/SpaetiProbe` aus diesem Repository kopieren (der ganze Ordner, inklusive `SpaetiProbe.toc` und `Probe.lua`; den Unterordner `tests` braucht das Spiel nicht, er stört aber auch nicht).
+1. `SpaetiProbe.zip` entpacken (oder den Ordner `tools/SpaetiProbe` aus diesem Repository kopieren; den Unterordner `tests` braucht das Spiel nicht).
 2. Einfügen nach:
    `World of Warcraft\_forever_\Interface\AddOns\`
    Danach muss es diese Datei geben:
@@ -16,10 +16,9 @@ Du brauchst dafür etwa **30–45 Minuten** und **ein zweites Gildenmitglied**, 
 4. Einloggen und einmal im Chat eingeben: `/console scriptErrors 1`
    Damit zeigt das Spiel Lua-Fehler an. Wenn ein Fehlerfenster auftaucht: Screenshot machen.
 
-## 2. Vorher in der Gilde ankündigen
+## 2. Hinweis
 
-Kurz in der Gilde ankündigen, dass Testnachrichten kommen, z. B.:
-„Ich teste gleich ein Gilden-Addon, es kommen 2–3 Testnachrichten mit [SpaetiProbe]. Einfach ignorieren.“
+Die Probe schreibt **nichts** in den Gildenchat. Sie verschickt nur unsichtbare Addon-Nachrichten, die andere Spieler nicht sehen.
 
 ## 3. Befehle – in dieser Reihenfolge
 
@@ -35,12 +34,9 @@ Am besten in einer Hauptstadt anfangen. Nach dem Einloggen **10 Minuten im Spiel
 | 5 | `/sfprobe font` | Schreibt `äöüß ÄÖÜ „Späti“` in den Chat. **Screenshot** vom Chat und vom Berichtsfenster (oben steht dort derselbe Schrifttest). |
 | 6 | `/sfprobe ping` | Schickt **eine** unsichtbare Addon-Nachricht an die Gilde. Am besten machen das beide Testpersonen. |
 | 7 | `/sfprobe burst` | Schickt 12 Addon-Nachrichten auf einmal, um die Drosselung zu messen. **Nur EINMAL ausführen, nicht wiederholen!** |
-| 8 | Bericht-Fenster öffnen (`/sfprobe`) und auf **„GILDE-Test senden“** klicken | Testet eine Gilden-Chatnachricht direkt aus einem Klick. |
-| 9 | `/sfprobe gildeslash` | Testet eine Gilden-Chatnachricht direkt aus einem Slash-Befehl. |
-| 10 | `/sfprobe gildetimer` | Testet eine Gilden-Chatnachricht, die 1 Sekunde später per Timer kommt. Falls ein Fenster „Aktion blockiert“ erscheint: Screenshot. |
-| 11 | Echo-Test (siehe unten) | Misst, ob Addon-Nachrichten beim Betreten/Verlassen eines Dungeons verloren gehen. |
-| 12 | Dungeon-Test (siehe unten) | Zeichnet auf, wann der Chat gesperrt ist. |
-| 13 | `/sfprobe` bzw. `/sfprobe anon` | Endbericht kopieren und zurückschicken (siehe Abschnitt 5). |
+| 8 | Echo-Test (siehe unten) | Misst, ob Addon-Nachrichten beim Betreten/Verlassen eines Dungeons verloren gehen. |
+| 9 | Dungeon-Test (siehe unten) | Zeichnet auf, wann der Chat gesperrt ist. |
+| 10 | `/sfprobe` bzw. `/sfprobe anon` | Endbericht kopieren und zurückschicken (siehe Abschnitt 5). |
 
 Alle Befehle auf einen Blick: `/sfprobe hilfe`.
 
@@ -73,7 +69,7 @@ Optional: Falls jemand in der Gilde einen **Test- oder Veteranen-Account** hat, 
 - Systemmeldungen aus den ersten 10 Minuten
 - gesendete und empfangene Addon-Nachrichten, Echo-Lücken
 - die Zeitleiste der Chat-Sperre
-- die Ergebnisse der Gilden-Chat-Tests
+- blockierte Aktionen (falls welche auftreten)
 
 Ein `||` im Bericht bedeutet ein einzelnes `|`-Zeichen.
 
@@ -91,7 +87,7 @@ Diese Datei kann man auch schicken. **Achtung:** Sie enthält die echten Namen u
 
 **Anonymisieren:** `/sfprobe anon` ersetzt Charakternamen durch `Member1`, `Member2` … und kürzt GUIDs. Die Form der Namen bleibt sichtbar (z. B. `Member1{xxxxx}-{xxxxxxx}`), weil genau das für uns wichtig ist. Bitte vor dem Verschicken trotzdem einmal drüberlesen: Namen von Freunden außerhalb der Gilde in Systemmeldungen werden eventuell nicht ersetzt.
 
-Bitte von **beiden** Testpersonen den Bericht schicken, dazu die Screenshots (Schrifttest, eventuelle Fehler- oder „Aktion blockiert“-Fenster) und eine kurze Notiz, welche Schritte ihr gemacht habt.
+Bitte von **beiden** Testpersonen den Bericht schicken, dazu die Screenshots (Schrifttest, eventuelle Fehlerfenster) und eine kurze Notiz, welche Schritte ihr gemacht habt.
 
 ## 6. Aufräumen
 

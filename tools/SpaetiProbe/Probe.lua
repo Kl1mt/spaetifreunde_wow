@@ -13,7 +13,6 @@ local MAX_SYSTEM = 100
 local MAX_TIMELINE = 200
 local MAX_ADDON_IN = 200
 local MAX_SENDS = 150
-local MAX_GUILDCHAT = 50
 local MAX_EVENTS = 100
 local MAX_ERRORS = 50
 local MAX_ECHO_RUNS = 20
@@ -37,7 +36,6 @@ local session = {
     nextSample = SAMPLE_INTERVAL,
     rosterUpdates = 0,
     registrations = {},       -- event -> "ok" or error text
-    timerKind = nil,
     echo = nil,               -- running echo sender
     pingCount = 0,
     prefixResult = "noch nicht registriert",
@@ -319,7 +317,7 @@ local function anonText(text)
 end
 
 ---------------------------------------------------------------------------
--- Scheduler (OnUpdate based; C_Timer only for the gildetimer test)
+-- Scheduler (OnUpdate based)
 ---------------------------------------------------------------------------
 
 local function schedule(delay, fn)
@@ -379,11 +377,6 @@ local function timeline(event, extra, onlyIfChanged)
         line = line .. " [" .. extra .. "]"
     end
     push("timeline", line .. " " .. s, MAX_TIMELINE, true)
-end
-
-local function lockedNow()
-    local ok, locked = call("C_ChatInfo.InChatMessagingLockdown")
-    return ok and not isSecret(locked) and locked == true
 end
 
 ---------------------------------------------------------------------------
@@ -639,56 +632,11 @@ handlers.CHAT_MSG_SYSTEM = function(text)
     end
 end
 
----------------------------------------------------------------------------
--- Guild chat tests
----------------------------------------------------------------------------
-
-local function guildChat(variant)
-    local text = "[SpaetiProbe] Gilden-Test (" .. variant .. ") - bitte ignorieren"
-    local entry = { at = stamp(), variant = variant, state = stateString() }
-    push("guildChat", entry, MAX_GUILDCHAT, true)
-    if not v1("IsInGuild") then
-        entry.result = "uebersprungen: nicht in einer Gilde (oder IsInGuild fehlt)"
-        out("Gilden-Test: " .. entry.result)
-        return
-    end
-    if lockedNow() then
-        entry.result = "uebersprungen: InChatMessagingLockdown() = true"
-        out("Gilden-Test: " .. entry.result)
-        return
-    end
-    local path = resolve("C_ChatInfo.SendChatMessage") and "C_ChatInfo.SendChatMessage" or "SendChatMessage"
-    entry.api = path
-    entry.result = fmtCall(path, text, "GUILD")
-    entry.arrived = "nein (noch nicht gesehen)"
-    session.lastGuildChat = entry
-    out("Gilden-Test (" .. variant .. ") via " .. path .. ": " .. entry.result)
-end
-
-handlers.CHAT_MSG_GUILD = function(text)
-    if isSecret(text) or type(text) ~= "string" then
-        return
-    end
-    local variant = text:match("^%[SpaetiProbe%] Gilden%-Test %((.-)%)")
-    if not variant then
-        return
-    end
-    for _, e in ipairs(DB.guildChat) do
-        if e.variant == variant and e.arrived and e.arrived:match("^nein") then
-            e.arrived = "ja, " .. stamp()
-        end
-    end
-end
-
 local function blocked(event, addonName, fn)
     if isSecret(addonName) or addonName ~= ADDON then
         return
     end
     local line = stamp() .. " " .. event .. " " .. str(fn)
-    local last = session.lastGuildChat
-    if last then
-        last.blocked = (last.blocked and (last.blocked .. "; ") or "") .. line
-    end
     push("events", line, MAX_EVENTS, true)
 end
 
@@ -722,6 +670,7 @@ handlers.PLAYER_LOGIN = function()
     ensureDB()
     session.systemUntil = session.clock + SYSTEM_CAPTURE_SECONDS
     session.systemDropped = 0
+    DB.system = {} -- each login gets its own 10-minute capture window
     requestRoster()
     timeline("PLAYER_LOGIN")
 end
@@ -1032,14 +981,7 @@ local function buildReport(anonymise)
         add(t)
     end
 
-    section("Gilden-Chat-Tests")
-    for _, e in ipairs(DB.guildChat) do
-        add(e.at, " ", e.variant, " via ", str(e.api), ": ", str(e.result), " | angekommen: ", str(e.arrived),
-            " | blockiert: ", str(e.blocked), " | ", str(e.state))
-    end
-    if #DB.guildChat == 0 then
-        add("(noch keine)")
-    end
+    section("Blockierte Aktionen")
     for _, e in ipairs(DB.events) do
         add(e)
     end
@@ -1154,10 +1096,6 @@ local function buildWindow()
         f:Hide()
     end)
     close:SetPoint("BOTTOMRIGHT", -18, 16)
-    local gb = newButton(f, "GILDE-Test senden", function()
-        guildChat("klick")
-    end)
-    gb:SetPoint("BOTTOMLEFT", 18, 16)
     local refresh = newButton(f, "Aktualisieren", function()
         if report then
             report.show(report.anon)
@@ -1214,30 +1152,10 @@ local HELP = {
     "/sfprobe ping - eine Addon-Nachricht an GILDE",
     "/sfprobe echo - 2 Minuten lang alle 2 s eine Nachricht (echo stop = abbrechen)",
     "/sfprobe burst - 12 Nachrichten auf einmal (nur EINMAL ausfuehren!)",
-    "/sfprobe gildeslash - Gilden-Chat-Test aus dem Slash-Befehl",
-    "/sfprobe gildetimer - Gilden-Chat-Test 1 s spaeter per Timer",
     "/sfprobe font - Schrifttest im Chat",
     "/sfprobe system - CHAT_MSG_SYSTEM-Aufzeichnung neu starten (10 min)",
     "/sfprobe reset - alle gespeicherten Probe-Daten loeschen",
 }
-
-local function cmdGuildTimer()
-    local after = resolve("C_Timer.After")
-    local function fire()
-        guildChat("timer")
-    end
-    if type(after) == "function" then
-        session.timerKind = "C_Timer.After"
-        local ok, err = pcall(after, 1, fire)
-        if not ok then
-            logError("C_Timer.After", err)
-        end
-    else
-        session.timerKind = "OnUpdate (C_Timer fehlt)"
-        schedule(1, fire)
-    end
-    out("Gilden-Test per Timer in 1 s (" .. session.timerKind .. ").")
-end
 
 local function handleSlash(alias, msg)
     ensureDB()
@@ -1255,10 +1173,6 @@ local function handleSlash(alias, msg)
         cmdBurst()
     elseif cmd == "echo" then
         cmdEcho(string.lower(rest or ""))
-    elseif cmd == "gildeslash" then
-        guildChat("slash")
-    elseif cmd == "gildetimer" then
-        cmdGuildTimer()
     elseif cmd == "font" then
         out("Schrifttest: " .. FONT_TEST)
     elseif cmd == "system" then
@@ -1312,7 +1226,7 @@ end
 local EVENTS = {
     "ADDON_LOADED", "PLAYER_LOGIN", "PLAYER_ENTERING_WORLD", "ZONE_CHANGED_NEW_AREA",
     "ENCOUNTER_START", "ENCOUNTER_END", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
-    "CHAT_MSG_SYSTEM", "CHAT_MSG_ADDON", "CHAT_MSG_GUILD", "GUILD_ROSTER_UPDATE",
+    "CHAT_MSG_SYSTEM", "CHAT_MSG_ADDON", "GUILD_ROSTER_UPDATE",
     "ADDON_ACTION_BLOCKED", "ADDON_ACTION_FORBIDDEN", "ADDON_RESTRICTION_STATE_CHANGED",
 }
 

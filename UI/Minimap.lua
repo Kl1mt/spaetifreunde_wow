@@ -108,7 +108,10 @@ end)
 ---------------------------------------------------------------------------
 -- Addon Compartment (TOC: AddonCompartmentFunc*). VERIFY IN-GAME on Forever.
 ---------------------------------------------------------------------------
-function SpaetiFreunde_OnCompartmentClick(_, mouseButton)
+-- 11.0+ passes (addonName, menuInputData, menu) with menuInputData.buttonName;
+-- older clients pass the button name string directly. Accept both.
+function SpaetiFreunde_OnCompartmentClick(_, input)
+    local mouseButton = type(input) == "table" and input.buttonName or input
     onClick(mouseButton)
 end
 

@@ -56,7 +56,8 @@ und Ergebnisse (✅ / ❌ + Notiz, Screenshot oder Fehlertext) zurückmelden.
 | U4 | Start-Tab: „Spruch zeigen“ | Lokaler Spruch, nur für dich. | |
 | U5 | Minimap-Knopf (Getränke-Symbol) | Linksklick: Fenster; Rechtsklick: Einstellungen; ziehen: Knopf wandert am Rand. Position bleibt nach `/reload`. | |
 | U6 | Umlaute | „ä ö ü ß“ und „„…““ werden überall korrekt angezeigt (Chat, Fenster, Tooltip). | |
-| U7 | Addon-Fach (Knopf an der Minimap mit allen Addons) | Eintrag „Spätifreunde Spandau“ mit Symbol, Tooltip beim Drüberfahren, Klick öffnet Fenster. | |
+| U7 | Addon-Fach (Knopf an der Minimap mit allen Addons) | Eintrag „Spätifreunde Spandau“ mit Symbol, Tooltip beim Drüberfahren, Linksklick öffnet Fenster. | |
+| U8 | Addon-Fach: **Rechtsklick** auf den Eintrag | Öffnet die Einstellungen (nicht das Fenster). | |
 
 ### Einstellungen
 | # | Test | Erwartet | Ergebnis |
@@ -65,7 +66,7 @@ und Ergebnisse (✅ / ❌ + Notiz, Screenshot oder Fehlertext) zurückmelden.
 | O2 | Häkchen ändern, ausloggen, einloggen | Einstellungen bleiben erhalten. | |
 | O3 | „Begrüßung beim Einloggen“ aus, `/reload` | Keine Begrüßungszeile mehr. | |
 | O4 | „Minimap-Knopf anzeigen“ aus | Knopf verschwindet sofort. | |
-| O5 | Info-Tab im Fenster | Dieselben Häkchen, synchron mit dem Optionsmenü. | |
+| O5 | Info-Tab im Fenster und Optionsmenü gleichzeitig offen, Häkchen im Info-Tab ändern | Das Optionsmenü zeigt sofort denselben Stand (und umgekehrt). | |
 
 ---
 
@@ -73,11 +74,9 @@ und Ergebnisse (✅ / ❌ + Notiz, Screenshot oder Fehlertext) zurückmelden.
 Diese Punkte sind im Code mit `VERIFY IN-GAME` markiert:
 - Interface-Nummer `16001` und AddOns-Pfad `_forever_`.
 - `C_ChatInfo.InChatMessagingLockdown` vorhanden? Wann ist sie `true` (ganze Instanz oder nur Bosskampf)?
-- `C_ChatInfo.SendChatMessage` vs. `SendChatMessage`: Gildenpost aus Slash-Befehl, Button-Klick **und** Chat-Link-Klick erlaubt?
 - `issecretvalue` vorhanden?
 - Slash-Befehl mit Umlaut (`/späti`).
 - Namensformat in der Gildenliste (Nachname, Realm-Suffix?) und ob `Ambiguate` den Namen verändert.
 - `C_GuildInfo.GuildRoster`, Felder von `GetGuildRosterInfo` (GUID an Position 17, `isMobile`).
 - Settings-API (`RegisterVerticalLayoutCategory`, `RegisterAddOnSetting`, `CreateCheckbox`, `OpenToCategory`).
 - Addon-Fach (`AddonCompartmentFunc` in der TOC), Vorlage `BasicFrameTemplateWithInset`, Symbol `INV_Drink_05`.
-- `addon:`-Chatlinks über `EventRegistry` „SetItemRef“.

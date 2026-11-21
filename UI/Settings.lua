@@ -12,6 +12,7 @@ ns.SettingsList = {
 }
 
 local category
+local settingObjects = {} -- key -> Settings setting object
 
 -- VERIFY IN-GAME: Settings API (11.x signatures) on Forever 1.60.1.
 local function register()
@@ -30,6 +31,7 @@ local function register()
         for _, opt in ipairs(ns.SettingsList) do
             local setting = Settings.RegisterAddOnSetting(cat, "SpaetiFreunde_" .. opt.key, opt.key,
                 store, varType, L[opt.label], ns.DB.defaults.settings[opt.key])
+            settingObjects[opt.key] = setting
             if setting and setting.SetValueChangedCallback then
                 setting:SetValueChangedCallback(function(_, value)
                     ns.DB:Set(opt.key, value and true or false)
@@ -46,6 +48,21 @@ local function register()
 end
 
 ns:On("SF_DB_READY", register)
+
+-- Change a setting from our own UI. Goes through the Settings object when there is
+-- one, so an open options panel updates too; its callback then calls DB:Set.
+function ns.SetSetting(key, value)
+    local setting = settingObjects[key]
+    if setting and setting.SetValue then
+        local ok = pcall(setting.SetValue, setting, value)
+        if ok then
+            -- DB:Set is idempotent; makes sure the DB is right even if no callback fired.
+            ns.DB:Set(key, value)
+            return
+        end
+    end
+    ns.DB:Set(key, value)
+end
 
 function ns.HasSettingsPanel()
     return category ~= nil
